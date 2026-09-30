@@ -1,7 +1,7 @@
 package com.eva.utils
 
 object IntentConstants {
-	const val APPLICATION_NAME = "com.eva.recorderapp"
+	const val APPLICATION_NAME = "com.gujiu502.lectureframe"
 	const val MAIN_ACTIVITY = "com.eva.recorderapp.MainActivity"
 	const val RECORDER_WIDGET_RECEIVER = "com.eva.feature_widget.receivers.RecorderWidgetReceiver"
 	const val RECORDINGS_WIDGET_RECEIVER =

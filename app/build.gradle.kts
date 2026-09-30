@@ -14,11 +14,11 @@ android {
 	compileSdk = libs.versions.compileSdk.get().toInt()
 
 	defaultConfig {
-		applicationId = "com.eva.recorderapp"
+		applicationId = "com.gujiu502.lectureframe"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 14
-		versionName = "1.4.4"
+		versionCode = 1
+		versionName = "0.1.0"
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -31,35 +31,20 @@ android {
 	}
 
 	signingConfigs {
-		// find if there is a properties file
-		val keySecretFile = rootProject.file("keystore.properties")
-		if (!keySecretFile.exists()) return@signingConfigs
-
-		// load the properties
-		val properties = Properties()
-		keySecretFile.inputStream().use { properties.load(it) }
-
-		val userHome = System.getProperty("user.home")
-		val storeFileName = properties.getProperty("STORE_FILE_NAME")
-
-		val keyStoreFolder = File(userHome, "keystore")
-		if (!keyStoreFolder.exists()) return@signingConfigs
-
-		val keyStoreFile = File(keyStoreFolder, storeFileName)
-		if (!keyStoreFile.exists()) return@signingConfigs
-
-		create("release") {
-			storeFile = keyStoreFile
-			keyAlias = properties.getProperty("KEY_ALIAS")
-			keyPassword = properties.getProperty("KEY_PASSWORD")
-			storePassword = properties.getProperty("STORE_PASSWORD")
-		}
-	}
+        val properties = Properties()
+        rootProject.file(".signing/release.properties").takeIf { it.exists() }?.inputStream()?.use { properties.load(it) }
+        fun secret(name: String): String? = System.getenv(name) ?: properties.getProperty(name)
+        if (rootProject.file(".signing/release.jks").exists()) create("release") {
+            storeFile = rootProject.file(".signing/release.jks")
+            storePassword = secret("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = secret("ANDROID_KEY_ALIAS")
+            keyPassword = secret("ANDROID_KEY_PASSWORD")
+        }
+    }
 
 	buildTypes {
 		release {
 			isMinifyEnabled = true
-			applicationIdSuffix = ".release"
 			isShrinkResources = true
 			multiDexEnabled = true
 			// change the signing config if release is not found
@@ -71,7 +56,7 @@ android {
 		}
 		debug {
 			applicationIdSuffix = ".debug"
-			resValue("string", "app_name", "RecorderApp (DEBUG)")
+			resValue("string", "app_name", "Photo Keyframe Recorder (Debug)")
 		}
 	}
 	compileOptions {

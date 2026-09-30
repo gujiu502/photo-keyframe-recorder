@@ -1,7 +1,7 @@
 package com.eva.utils
 
 object NavDeepLinks {
-	private const val BASE_URI = "app://com.eva.recorderapp"
+	private const val BASE_URI = "app://com.gujiu502.lectureframe"
 
 	const val RECORDER_DESTINATION_PATTERN = BASE_URI
 	const val RECORDING_DESTINATION_PATTERN = "$BASE_URI/recordings"

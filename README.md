@@ -1,128 +1,40 @@
-# :studio_microphone: RecorderApp
+# Photo Keyframe Recorder
 
-An android audio recorder app, designed to simplify the process of capturing and managing
-recordings. With a clean and intuitive interface, this app offers a seamless user experience.
+录音时拍下板书或 PPT，回放时点照片时间跳到对应音频。Android 10 及以上，数据保存在手机本地。
 
-## 💁 About
+**[下载 APK](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.1.0)** · [所有版本](https://github.com/gujiu502/photo-keyframe-recorder/releases) · [实现与验证说明](docs/IMPLEMENTATION.md)
 
-A fully functioned recorder app with an ability to record over multiple media codec like **acc**,*
-*amr**,**opus** over different quality. The app can continue its recording in the background, so you
-never miss a moment. Once the recording, you can easily manage your files within the app.
-There `built-in player`, you can listen to your recordings directly within the app or use the
-convenient media notification for playback control.
-Want to remove certain section of your recordings, use the audio editor that allows you to easily
-cut and trim unwanted sections.
-The apps also features creating `category` for the recordings the categories help to keep the
-recording organized, you can also add `bookmarks` to the portion of the recording.
+第一版为公开预览版。完整的两小时录音压力测试及不同实体手机验证尚未完成，请先用短录音确认你的设备兼容性。
 
-### :building_construction: Features
+## 使用
 
-What are the features this app can provide, here's some:
+1. 允许麦克风权限，开始录音。
+2. 点「拍照关键帧」，首次使用允许相机权限。快门记录此刻的音频毫秒位置；相机打开时录音继续。
+3. 暂停时也能拍照，照片标在暂停位置。
+4. 停止并保存录音，在录音列表打开播放器。
+5. 点关键帧时间播放对应片段，点图片全屏查看；可用上一帧／下一帧。
+6. 点「导出」保存 ZIP 讲义包：音频、照片、`manifest.json`、`timeline.json`、`lecture.md`。
 
-- :musical_keyboard: **Effortless Recording**: Start recording instantly with a single tap of a
-  button.
-- :chart_with_upwards_trend: **Real time Visualization**: Watch the amplitude levels fluctuate in
-  real-time as you record or play the media.
-- :loop: **Background Recording**: Keep recording even when you switch to other apps or lock your
-  device.
-- :bellhop_bell: **Convenient Notifications**: Control your recordings directly from
-  notifications,without having to return to the app.
-- :file_cabinet: **File Management**: Organize, delete, share, or rename your own recordings with
-  ease, on api level `api-31`+ you can also read other apps recordings.
-- :package: **Category Management**: Categories your recording into different category, so that you
-  can easily find the required one.
-- :record_button: **Built-in Player**: Listen to your recordings directly within the app, complete
-  with a media notification for easy playback control.
-- 👨‍🍳 **Build in Editor** : Seamlessly trim and cut section of your recording or other files.
-- :bookmark: **Bookmarks** : You can add multiple bookmarks with the recording to easily remember
-  the important portions of your recording. You can too export the bookmarks as csv file.
-- :eight_spoked_asterisk: **Widgets And Shortcuts** : App comes with two `widgets` and few
-  `shortcuts` to ease the experience of the user.
+应用异常退出后会显示未完成录音。可尝试恢复，或导出原始文件。被强制停止的 MP4/AAC 可能缺少结尾索引，应用会保留它，但不能保证直接播放或续录。不要在导出前丢弃重要录音。
 
-## 📷 Screenshots
+## 开源来源
 
-These are some screen shorts for the app
+基于 [tuuhin/RecorderApp v1.4.4](https://github.com/tuuhin/RecorderApp/tree/v1.4.4)，沿用其录音器、播放器、波形、书签、分类、通知与回收站，遵循 [MIT License](LICENCE)。照片拍摄使用 AndroidX CameraX。没有复制 GPL NotePad 的实现。
 
-<p align="center">
+新增工作包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出。无账号、广告、分析 SDK 或云上传；没有 Internet 权限。系统自动备份关闭，请使用讲义包导出备份。
 
-   <img src="./screenshots/recorder_base_framed.png" width="24%" />
-   <img src="./screenshots/recordings_framed.png" width="24%" />
-   <img src="./screenshots/player_base_framed.png" width="24%" />
-   <img src="./screenshots/app_settings_framed.png" width="24%" />
-   <img src="./screenshots/recordings_search_screen_framed.png" width="24%">
-   <img src="./screenshots/edit_screen_normal.png" width="21%" />
-   <img src="./screenshots/player_bookmarks_framed.png" width="24%" />
-   <img src="./screenshots/app_widget_preview_framed.png" width="24%" />
-</p>
+## 构建
 
-For more [screenshots](./screenshots).
+需要 JDK 17 和 Android SDK 36。Windows 请使用不含中文的项目路径。
 
-## :safety_pin: Permissions
+```sh
+./gradlew :app:assembleDebug :data:recorder:testDebugUnitTest
+./gradlew :data:database:connectedDebugAndroidTest
+./gradlew :app:lintRelease :app:assembleRelease
+```
 
-Basically, Android is a bit of a control freak when it comes to apps. It's all about keeping your
-phone safe and sound.Here are the list of permission required in this app
+正式 APK 使用独立包名 `com.gujiu502.lectureframe`，不会覆盖 RecorderApp。Debug 包名带 `.debug`。
 
-- :microphone: **Record Audio** : Use to record voices and other sounds
-- :musical_note: **Music and Audio Access** : Use to save and read the recordings
-- :bell: **Notifications** : Yes you can control the recorder from the notification
+签名文件保存在忽略的 `.signing/release.jks`。本地 `.signing/release.properties` 使用 `ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_PASSWORD`、`ANDROID_KEY_ALIAS` 三个字段；也可通过同名环境变量提供。GitHub 自动发布另需 `ANDROID_KEYSTORE_BASE64` secret。保留原签名密钥才能兼容以后升级，密钥不进入 Git。
 
-There are some optional permissions, but they aren't necessary to the core audio recording and
-playing stuff.
-
-- :telephone_receiver: **Phone State** : To handle incomming calls during a recording.
-- :world_map: **Location** : Some mediacodec like `acc` and `three_gpp` can add a
-  location data with the recording.You can view this location data on other devices which can read
-  metadata.
-
-## :new: What's new
-
-The latest update to the **RecorderApp** makes the Player audio graph smoother alongside scrollable
-to seek player position
-
-## :next_track_button: What's next
-
-For the time being, RecorderApp encompasses all initially planned features and is
-considered complete. Future releases are not currently scheduled.
-
-If you have any new ideas or suggestions for enhancements, we encourage you to create a
-new [Issue](https://github.com/tuuhin/RecorderApp/issues) on GitHub.
-
-## :hammer_and_wrench: Getting Started
-
-Here are the steps to get started with this app:
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone https://github.com/tuuhin/RecorderApp.git
-   ```
-
-2. **Open Project**
-   Open the project in android studio
-
-3. **Build and Run**
-   Build and run on android device with api 29 and above
-
-You have your app running this is just simple as that.
-
-### :woman_cook: Contributing
-
-Contributions are always welcomed from the community
-
-- Fork the repository.
-- Create your feature branch (git checkout -b feature/YourFeature).
-- Commit your changes (git commit -am 'Add some feature').
-- Push to the branch (git push origin feature/YourFeature).
-- Submit a request to merge your changes onto `dev` branch of main project.
-
-### :curly_loop: Feedback and Support
-
-AN app is never perfect there may issue here and there which are not caught.If you encounter any
-issues, have suggestions for new features, or just want to share your thoughts, please don't
-hesitate to reach out by creating a new [Issue](https://github.com/tuuhin/RecorderApp/issues) on
-GitHub. Your feedback is invaluable!
-
-### :end: Conclusion
-
-The app can be marked as finished for now. A significant amount of time and effort has been invested
-in this project hope you all love it.
+CI 运行编译、计时测试和 lint。设备工作流运行数据库迁移和持久化测试，以及 API 34 模拟器上的相机／录音流程。带 `v` 的标签生成签名 APK 和 SHA-256 校验文件。

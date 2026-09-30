@@ -15,3 +15,8 @@
 .cxx
 local.properties
 keystore.properties
+.signing/
+*.log
+**/build/
+work/
+*-check.png

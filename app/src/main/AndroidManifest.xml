@@ -4,7 +4,7 @@
 
   <application
     android:name=".RecorderApp"
-    android:allowBackup="true"
+    android:allowBackup="false"
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:enableOnBackInvokedCallback="true"
     android:fullBackupContent="@xml/backup_rules"
@@ -43,7 +43,7 @@
         <category android:name="android.intent.category.DEFAULT" />
 
         <data android:scheme="app" />
-        <data android:host="${applicationId}" />
+        <data android:host="com.gujiu502.lectureframe" />
 
       </intent-filter>
 
