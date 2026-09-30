@@ -113,9 +113,15 @@ internal class RecorderFileProviderImpl(
 				}
 				Log.d(LOGGER_TAG, "CONTENT COPIED")
 				val newMetaData = ContentValues().apply {
+					sessionId?.let { sessions.dao.session(it) }?.let { session ->
+						val name = session.fileName ?: "錄音_${java.time.Instant.ofEpochMilli(session.startedAt).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))}"
+						put(MediaStore.Audio.AudioColumns.DISPLAY_NAME, "$name.${android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "m4a"}")
+						put(MediaStore.Audio.AudioColumns.TITLE, name)
+					}
 					put(MediaStore.Audio.AudioColumns.IS_PENDING, 0)
 				}
 				val result = context.contentResolver.update(contentUri, newMetaData, null, null)
+				check(result == 1) { "無法保存錄音檔名" }
 				Log.d(LOGGER_TAG, "UPDATED URI AFTER COPY :${result == 1}")
 				contentUri
 			} catch (_: Exception) {

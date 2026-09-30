@@ -71,7 +71,7 @@ private fun EditorActionsAndControls(
 			) {
 				Icon(
 					painter = painterResource(R.drawable.ic_cut),
-					contentDescription = "Action Cut"
+					contentDescription = "剪除"
 				)
 			}
 			AnimatedPlayPauseButton(
@@ -88,7 +88,7 @@ private fun EditorActionsAndControls(
 			) {
 				Icon(
 					painter = painterResource(R.drawable.ic_crop),
-					contentDescription = "Action Crop"
+					contentDescription = "裁切"
 				)
 			}
 		}

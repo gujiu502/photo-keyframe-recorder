@@ -11,6 +11,12 @@ import kotlin.time.ExperimentalTime
 
 object DBMigrations {
 
+	val MIGRATE_7_8 = object : Migration(7, 8) {
+		override fun migrate(db: SupportSQLiteDatabase) {
+			db.execSQL("ALTER TABLE recording_sessions ADD COLUMN fileName TEXT")
+		}
+	}
+
 	val MIGRATE_6_7 = object : Migration(6, 7) {
 		override fun migrate(db: SupportSQLiteDatabase) {
 			db.execSQL("CREATE TABLE IF NOT EXISTS recording_sessions (sessionId TEXT NOT NULL PRIMARY KEY, startedAt INTEGER NOT NULL, status TEXT NOT NULL, audioPath TEXT, recordingId INTEGER, positionMs INTEGER NOT NULL, mimeType TEXT NOT NULL, exportUri TEXT)")

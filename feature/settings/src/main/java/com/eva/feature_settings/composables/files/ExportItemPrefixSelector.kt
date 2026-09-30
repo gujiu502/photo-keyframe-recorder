@@ -74,7 +74,7 @@ internal fun ExportItemPrefixSelector(
 		leadingContent = {
 			Icon(
 				painter = painterResource(R.drawable.ic_export),
-				contentDescription = "Set edit item prefix"
+				contentDescription = "設定導出前綴"
 			)
 		},
 		supportingContent = { Text(text = currentPrefix) },

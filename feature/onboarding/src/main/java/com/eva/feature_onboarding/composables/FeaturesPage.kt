@@ -86,7 +86,7 @@ private fun StackedImages(
 	) {
 		Image(
 			painter = painterResource(R.drawable.ic_recorder),
-			contentDescription = "Recorder",
+			contentDescription = "錄音",
 			colorFilter = ColorFilter.tint(color),
 			modifier = Modifier
 				.size(size)
@@ -94,7 +94,7 @@ private fun StackedImages(
 		)
 		Image(
 			painter = painterResource(R.drawable.ic_music_player),
-			contentDescription = "Player",
+			contentDescription = "播放器",
 			colorFilter = ColorFilter.tint(color),
 			modifier = Modifier
 				.size(size)
@@ -102,7 +102,7 @@ private fun StackedImages(
 		)
 		Image(
 			painter = painterResource(R.drawable.ic_music_edit),
-			contentDescription = "Edit",
+			contentDescription = "編輯",
 			colorFilter = ColorFilter.tint(color),
 			modifier = Modifier
 				.size(size)
@@ -110,7 +110,7 @@ private fun StackedImages(
 		)
 		Image(
 			painter = painterResource(R.drawable.ic_list),
-			contentDescription = "Organize",
+			contentDescription = "整理",
 			colorFilter = ColorFilter.tint(color),
 			modifier = Modifier
 				.size(size)

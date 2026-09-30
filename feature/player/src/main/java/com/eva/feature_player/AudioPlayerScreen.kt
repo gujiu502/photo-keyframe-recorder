@@ -141,7 +141,7 @@ internal fun AudioPlayerScreen(
 				) {
 					CircularProgressIndicator()
 					Text(
-						text = "Preparing player",
+						text = "正在準備播放器",
 						style = MaterialTheme.typography.titleMedium,
 						color = MaterialTheme.colorScheme.onSurface
 					)

@@ -19,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+	@javax.inject.Inject lateinit var sessions: com.eva.database.SessionStore
 
 	private var navController: NavHostController? = null
 
@@ -27,6 +28,10 @@ class MainActivity : ComponentActivity() {
 		val splash = installSplashScreen()
 
 		super.onCreate(savedInstanceState)
+		if (intent.getBooleanExtra("request_recording_name", false)) {
+			sessions.namingRequested.value = true
+			intent.removeExtra("request_recording_name")
+		}
 
 		// set enable edge to edge normally
 		enableEdgeToEdge()
@@ -51,6 +56,10 @@ class MainActivity : ComponentActivity() {
 
 	override fun onNewIntent(intent: Intent) {
 		super.onNewIntent(intent)
+		if (intent.getBooleanExtra("request_recording_name", false)) {
+			sessions.namingRequested.value = true
+			intent.removeExtra("request_recording_name")
+		}
 		navController?.handleDeepLink(intent)
 	}
 

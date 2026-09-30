@@ -96,7 +96,7 @@ internal fun ImportantPermissionsPage(
 	) {
 		Image(
 			painter = painterResource(R.drawable.ic_security),
-			contentDescription = "Permission security",
+			contentDescription = "權限說明",
 			colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.tertiary),
 			modifier = Modifier.size(100.dp)
 		)

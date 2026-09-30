@@ -20,6 +20,19 @@ private const val TEST_DB_NAME = "migration-test-db"
 @RunWith(AndroidJUnit4::class)
 class DBMigrationsTests {
 
+	@Test fun migrate_7_to_8_preserves_sessions_and_timeline() {
+		val db = testHelper.createDatabase("naming-migration", 7)
+		db.execSQL("INSERT INTO recording_sessions VALUES ('session', 123, 'RECOVERY_REQUIRED', '/audio.m4a', NULL, 871420, 'audio/mp4', NULL)")
+		db.execSQL("INSERT INTO timeline_items VALUES ('photo', 'session', NULL, 871420, 'PHOTO', '/photo.jpg', '', 'READY', 123)")
+		db.close()
+		val migrated = testHelper.runMigrationsAndValidate("naming-migration", 8, true, DBMigrations.MIGRATE_7_8)
+		migrated.query("SELECT positionMs, fileName FROM recording_sessions").use {
+			assertTrue(it.moveToFirst()); assertEquals(871420L, it.getLong(0)); assertTrue(it.isNull(1))
+		}
+		migrated.query("SELECT state FROM timeline_items").use { assertTrue(it.moveToFirst()); assertEquals("READY", it.getString(0)) }
+		migrated.close()
+	}
+
 	@Test fun migrate_6_to_7_preserves_bookmarks_and_recordings() {
 		val db = testHelper.createDatabase("keyframe-migration", 6)
 		db.execSQL("INSERT INTO recording_meta_data (RECORDING_ID, IS_FAVOURITE) VALUES (99, 1)")

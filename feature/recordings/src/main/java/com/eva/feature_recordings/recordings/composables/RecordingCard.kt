@@ -193,13 +193,13 @@ private fun Modifier.recordingCardCombinedClick(
 
 	val clickModifier = if (isSelectable) clickable(
 		onClick = onItemSelectUpdatedState,
-		onClickLabel = "Item Selected"
+		onClickLabel = "選取錄音"
 	)
 	else combinedClickable(
 		onClick = onItemClickUpdatedState,
 		onLongClick = onItemSelectUpdatedState,
-		onClickLabel = "Item Clicked",
-		onLongClickLabel = "Item Selected"
+		onClickLabel = "開啟錄音",
+		onLongClickLabel = "選取錄音"
 	)
 
 	clip(clipShape).then(clickModifier)

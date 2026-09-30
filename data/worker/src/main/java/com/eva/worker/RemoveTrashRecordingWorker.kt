@@ -59,8 +59,8 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 		return NotificationCompat
 			.Builder(context, NotificationConstants.RECORDER_CHANNEL_ID)
 			.setSmallIcon(R.drawable.ic_broom)
-			.setContentTitle("Clearing Trash")
-			.setContentText("Removing expired recordings")
+			.setContentTitle("正在清理回收桶")
+			.setContentText("正在刪除過期錄音")
 			.setAutoCancel(true)
 			.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)

@@ -183,7 +183,7 @@ internal class RecordingsViewmodel @Inject constructor(
 							return@onEach
 						}
 						val message = result.error.message ?: result.message
-						?: "Cannot move items to trash"
+						?: "無法將錄音移至回收桶"
 
 						viewModelScope.launch {
 							_uiEvents.emit(UIEvents.ShowSnackBar(message))
@@ -191,7 +191,7 @@ internal class RecordingsViewmodel @Inject constructor(
 					}
 
 					is Resource.Success -> {
-						val message = result.message ?: "Moved items to trash"
+						val message = result.message ?: "已移至回收桶"
 						viewModelScope.launch {
 							_uiEvents.emit(UIEvents.ShowToast(message))
 						}
@@ -226,7 +226,7 @@ internal class RecordingsViewmodel @Inject constructor(
 			}
 
 			is Resource.Success -> {
-				val message = result.message ?: "Added to Favourites"
+				val message = result.message ?: "已加入收藏"
 				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 			}
 

@@ -72,7 +72,7 @@ private fun SettingsItemSwitchPreview() = RecorderAppTheme {
 	SettingsItemWithSwitch(
 		isSelected = false,
 		title = "Title",
-		text = "Supporting Text",
+		text = "說明文字",
 		onSelect = { },
 	)
 }

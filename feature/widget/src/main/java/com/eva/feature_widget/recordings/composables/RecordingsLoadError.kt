@@ -67,5 +67,5 @@ internal fun RecordingsLoadError(
 @GlancePreviewRecordings
 @Composable
 private fun RecordingsLoadErrorPreview() = RecorderAppWidgetTheme {
-	RecordingsLoadError(message = "Failed to load", modifier = GlanceModifier.fillMaxSize())
+	RecordingsLoadError(message = "載入失敗", modifier = GlanceModifier.fillMaxSize())
 }

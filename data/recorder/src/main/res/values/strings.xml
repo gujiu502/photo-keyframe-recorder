@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="recorder_action_pause" translatable="false">Pause</string>
-  <string name="recorder_action_resume" translatable="false">Resume</string>
-  <string name="recorder_action_stop" translatable="false">Stop</string>
-  <string name="recorder_action_cancel" translatable="false">Cancel</string>
-  <string name="recorder_notification_text_running">Recorder is running</string>
-  <string name="recorder_notification_text_paused">Recorder Paused</string>
-  <string name="recorder_recording_completed">Recording Completed</string>
-  <string name="recorder_recording_completed_text">Saved to external storage</string>
-  <string name="recorder_recording_completed_text_2">Click to play</string>
-  <string name="toast_recording_bluetooth">Using bluetooth mic</string>
-  <string name="toast_incoming_call">Incoming call</string>
-  <string name="bookmarks_saved">Bookmarks Added</string>
+  <string name="recorder_action_pause" translatable="false">暫停</string>
+  <string name="recorder_action_resume" translatable="false">繼續錄音</string>
+  <string name="recorder_action_stop" translatable="false">停止</string>
+  <string name="recorder_action_cancel" translatable="false">取消</string>
+  <string name="recorder_notification_text_running">正在錄音</string>
+  <string name="recorder_notification_text_paused">錄音已暫停</string>
+  <string name="recorder_recording_completed">錄音完成</string>
+  <string name="recorder_recording_completed_text">已保存到裝置</string>
+  <string name="recorder_recording_completed_text_2">點按播放</string>
+  <string name="toast_recording_bluetooth">正在使用藍牙麥克風</string>
+  <string name="toast_incoming_call">收到來電</string>
+  <string name="bookmarks_saved">已新增書籤</string>
 </resources>

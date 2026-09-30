@@ -105,10 +105,10 @@ private fun IconButtonWithTextPreview(
 			icon = {
 				Icon(
 					painter = painterResource(R.drawable.ic_category_label),
-					contentDescription = "Key"
+					contentDescription = "按鈕"
 				)
 			},
-			text = "Icon key",
+			text = "按鈕",
 			onClick = {},
 			enabled = enabled,
 		)
@@ -123,10 +123,10 @@ private fun IconButtonWithTextSelectedPreview() = RecorderAppTheme {
 			icon = {
 				Icon(
 					painter = painterResource(R.drawable.ic_category_label),
-					contentDescription = "Key"
+					contentDescription = "按鈕"
 				)
 			},
-			text = "Icon key",
+			text = "按鈕",
 			onClick = {},
 			isSelected = true
 		)

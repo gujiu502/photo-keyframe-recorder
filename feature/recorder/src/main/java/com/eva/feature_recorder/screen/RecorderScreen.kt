@@ -67,7 +67,7 @@ internal fun VoiceRecorderScreen(
 				onAddBookMark = { onRecorderAction(RecorderAction.AddBookMarkAction) },
 				navigation = navigation
 			)
-			com.eva.feature_recorder.keyframe.KeyframeTools(recorderState, { recorderTimer().toString().substringBefore('.') })
+			com.eva.feature_recorder.keyframe.KeyframeTools(recorderState, { recorderTimer().toString().substringBefore('.') }, onRecorderAction)
 			}
 		},
 		snackbarHost = { SnackbarHost(snackBarHostState) },

@@ -70,7 +70,7 @@ internal class CreateCategoryViewModel @Inject constructor(
 
 		when (val result = categoryProvider.getCategoryFromId(categoryId)) {
 			is Resource.Error -> {
-				_uiEvents.emit(UIEvents.ShowSnackBar("Cannot Find a category Fallback to create"))
+				_uiEvents.emit(UIEvents.ShowSnackBar("找不到分類，請建立新分類"))
 			}
 
 			is Resource.Success -> {
@@ -97,7 +97,7 @@ internal class CreateCategoryViewModel @Inject constructor(
 		val categoryName = state.textValue.text
 
 		if (categoryName.isBlank()) {
-			_createState.update { it.copy(error = "Cannot have empty values") }
+			_createState.update { it.copy(error = "內容不可空白") }
 			return
 		}
 
@@ -108,8 +108,8 @@ internal class CreateCategoryViewModel @Inject constructor(
 			when (val result = categoryProvider.updateCategory(model)) {
 				is Resource.Error -> {
 
-					val message = result.message ?: "Cannot perform edit"
-					val snackBarMessage = result.error.message ?: "Cannot update category"
+					val message = result.message ?: "無法編輯"
+					val snackBarMessage = result.error.message ?: "無法更新分類"
 
 					_createState.update { it.copy(error = message) }
 					_uiEvents.emit(UIEvents.ShowSnackBar(snackBarMessage))
@@ -131,7 +131,7 @@ internal class CreateCategoryViewModel @Inject constructor(
 		val categoryName = state.textValue.text
 
 		if (categoryName.isBlank()) {
-			_createState.update { it.copy(error = "Cannot have empty values") }
+			_createState.update { it.copy(error = "內容不可空白") }
 			return
 		}
 		viewModelScope.launch {

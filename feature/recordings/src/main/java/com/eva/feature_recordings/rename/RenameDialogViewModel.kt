@@ -80,7 +80,7 @@ internal class RenameDialogViewModel @Inject constructor(
 	private fun loadEntry() = viewModelScope.launch {
 		when (val result = recordingsProvider.getVoiceRecordingAsResourceFromId(recordingId)) {
 			is Resource.Error -> {
-				val message = result.error.message ?: result.message ?: "Recording not found"
+				val message = result.error.message ?: result.message ?: "找不到錄音"
 				_state.update { state ->
 					state.copy(errorString = message, isRenameAllowed = false)
 				}
@@ -103,7 +103,7 @@ internal class RenameDialogViewModel @Inject constructor(
 		val newName = _state.value.textFieldState.text.trim()
 
 		if (newName.isEmpty() || newName.isBlank()) {
-			_state.update { state -> state.copy(errorString = "Cannot have blank values") }
+			_state.update { state -> state.copy(errorString = "名稱不可空白") }
 			return
 		}
 
@@ -116,7 +116,7 @@ internal class RenameDialogViewModel @Inject constructor(
 						val error = result.error
 						if (error is SecurityException) {
 							// show the toast
-							val message = result.message ?: "Access not allowed"
+							val message = result.message ?: "沒有存取權限"
 							_uiEvents.emit(UIEvents.ShowToast(message))
 
 							// then handle security exception
@@ -131,7 +131,7 @@ internal class RenameDialogViewModel @Inject constructor(
 					}
 
 					is Resource.Success -> {
-						val message = result.message ?: "Renamed recording successfully"
+						val message = result.message ?: "已重新命名錄音"
 						_uiEvents.emit(UIEvents.ShowToast(message))
 						_uiEvents.emit(UIEvents.PopScreen)
 					}

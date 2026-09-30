@@ -27,7 +27,7 @@ android {
 	}
 
 	androidResources {
-		localeFilters.addAll(setOf("bn", "hi"))
+		localeFilters.addAll(setOf("zh"))
 	}
 
 	signingConfigs {
@@ -56,7 +56,7 @@ android {
 		}
 		debug {
 			applicationIdSuffix = ".debug"
-			resValue("string", "app_name", "Photo Keyframe Recorder (Debug)")
+			resValue("string", "app_name", "照片關鍵幀錄音（測試版）")
 		}
 	}
 	compileOptions {
@@ -89,6 +89,7 @@ dependencies {
 	implementation(libs.androidx.hilt.work)
 
 	implementation(project(":core:utils"))
+	implementation(project(":data:database"))
 	implementation(project(":core:ui"))
 	implementation(project(":data:worker"))
 	implementation(project(":data:interactions"))

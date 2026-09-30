@@ -122,7 +122,7 @@ class PlayerVisualizerViewmodel @Inject constructor(
 			)
 			_compressedVisualization.update { newVisuals }
 		} catch (_: IllegalStateException) {
-			_uiEvents.emit(UIEvents.ShowSnackBar("Cannot update visuals"))
+			_uiEvents.emit(UIEvents.ShowSnackBar("無法更新波形"))
 		}
 	}.launchIn(viewModelScope)
 

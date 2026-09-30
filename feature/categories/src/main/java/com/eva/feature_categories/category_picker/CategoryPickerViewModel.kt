@@ -77,7 +77,7 @@ internal class CategoryPickerViewModel @Inject constructor(
 		val selectedCategory = _selected.value ?: return@launch
 
 		if (recordingIds.isEmpty()) {
-			_uiEvents.emit(UIEvents.ShowToast(message = "Select recordings"))
+			_uiEvents.emit(UIEvents.ShowToast(message = "請選擇錄音"))
 			_uiEvents.emit(UIEvents.PopScreen)
 			return@launch
 		}
@@ -94,7 +94,7 @@ internal class CategoryPickerViewModel @Inject constructor(
 			}
 
 			is Resource.Success -> {
-				val message = result.message ?: "Category set"
+				val message = result.message ?: "已設定分類"
 				_uiEvents.emit(UIEvents.ShowToast(message = message))
 				_uiEvents.emit(UIEvents.PopScreen)
 			}

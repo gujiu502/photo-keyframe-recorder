@@ -167,8 +167,8 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 
 			if (clipData.start == Duration.ZERO && clipData.end == trackData.total) {
 				val message = when (action) {
-					AudioEditAction.CROP -> "Crop section is same as original"
-					AudioEditAction.CUT -> "Cannot remove the whole media"
+					AudioEditAction.CROP -> "裁切範圍與原始音訊相同"
+					AudioEditAction.CUT -> "不能刪除整段音訊"
 				}
 				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 				return@launch
@@ -188,19 +188,19 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 			result.fold(
 				onSuccess = {
 					val message = when (action) {
-						AudioEditAction.CROP -> "Crop Applied"
-						AudioEditAction.CUT -> "Cut Applied"
+						AudioEditAction.CROP -> "已裁切"
+						AudioEditAction.CUT -> "已剪除"
 					}
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				},
-				onFailure = { _uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: "Some error")) },
+				onFailure = { _uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: "操作失敗")) },
 			)
 		}
 	}
 
 	fun onUndoOrRedoConfigs(isUndo: Boolean) = viewModelScope.launch {
 		val fileModel = _currentFile.value ?: run {
-			_uiEvents.emit(UIEvents.ShowToast("No Audio model found"))
+			_uiEvents.emit(UIEvents.ShowToast("找不到音訊"))
 			return@launch
 		}
 		// new clipping config
@@ -212,7 +212,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 		val result = player.editMediaPortions(fileModel, filteredData)
 		result.fold(
 			onSuccess = {},
-			onFailure = { _uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: "Some error")) },
+			onFailure = { _uiEvents.emit(UIEvents.ShowSnackBar(it.message ?: "操作失敗")) },
 		)
 	}
 
@@ -260,7 +260,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 	private fun cancelFinalExport() {
 		_exportJob?.cancel()
 		_exportJob = null
-		viewModelScope.launch { _uiEvents.emit(UIEvents.ShowToast("Cancelled")) }
+		viewModelScope.launch { _uiEvents.emit(UIEvents.ShowToast("已取消")) }
 	}
 
 	private fun finalExport() {
@@ -275,7 +275,7 @@ internal class AudioEditorViewModel @AssistedInject constructor(
 			result.fold(
 				onSuccess = { data -> _exportFileUri.update { data.toUri().toString() } },
 				onFailure = { exp ->
-					val message = exp.message ?: "Some transformation error"
+					val message = exp.message ?: "音訊處理失敗"
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				},
 			)

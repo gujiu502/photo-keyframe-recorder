@@ -86,14 +86,14 @@ internal fun TransformsSheetContent(
 			when (type) {
 				TransformType.IDLE -> Image(
 					painter = painterResource(R.drawable.ic_transformation),
-					contentDescription = "Transformation",
+					contentDescription = "正在處理",
 					colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
 					modifier = Modifier.size(128.dp)
 				)
 
 				TransformType.READY_FOR_EXPORT -> Image(
 					painter = painterResource(R.drawable.ic_success),
-					contentDescription = "success icon",
+					contentDescription = "完成",
 					colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary),
 					modifier = Modifier.size(128.dp)
 				)

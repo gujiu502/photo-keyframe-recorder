@@ -108,12 +108,12 @@ internal class RecordingsBinViewmodel @Inject constructor(
 	private fun onRecordingsRestore() = viewModelScope.launch {
 		when (val result = provider.restoreRecordingsFromTrash(selectedRecordings)) {
 			is Resource.Error -> {
-				val message = result.message ?: "Cannot restore items"
+				val message = result.message ?: "無法還原錄音"
 				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 			}
 
 			is Resource.Success -> {
-				val message = result.message ?: "Items restored"
+				val message = result.message ?: "已還原錄音"
 				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
 
@@ -134,12 +134,12 @@ internal class RecordingsBinViewmodel @Inject constructor(
 							return@onEach
 						}
 						val message =
-							result.error.message ?: result.message ?: "Cannot delete items"
+							result.error.message ?: result.message ?: "無法刪除錄音"
 						_uiEvents.emit(UIEvents.ShowSnackBar(message))
 					}
 
 					is Resource.Success -> {
-						val message = result.message ?: "Items deleted successfully"
+						val message = result.message ?: "已刪除錄音"
 						_uiEvents.emit(UIEvents.ShowToast(message))
 					}
 

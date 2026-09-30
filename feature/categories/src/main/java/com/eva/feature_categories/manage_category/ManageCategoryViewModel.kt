@@ -80,12 +80,12 @@ internal class ManageCategoryViewModel @Inject constructor(
 	private fun deleteCategory(categoryModel: RecordingCategoryModel) = viewModelScope.launch {
 		when (val result = provider.deleteCategory(categoryModel)) {
 			is Resource.Error -> {
-				val message = result.message ?: "Cannot delete category"
+				val message = result.message ?: "無法刪除分類"
 				_uiEvents.emit(UIEvents.ShowSnackBar(message))
 			}
 
 			is Resource.Success -> {
-				val message = result.message ?: "Deleted categories successfully"
+				val message = result.message ?: "已刪除分類"
 				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
 

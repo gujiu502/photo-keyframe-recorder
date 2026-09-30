@@ -13,6 +13,6 @@ import javax.inject.Inject
 internal class KeyframePlayerViewModel @Inject constructor(val sessions: SessionStore, private val exporter: LectureExporter) : ViewModel() {
     fun export(destination: Uri, audio: Uri, id: Long, title: String, result: (String) -> Unit) = viewModelScope.launch {
         runCatching { exporter.export(destination, audio, id, title = title) }
-            .onSuccess { result("讲义包已导出") }.onFailure { result(it.message ?: "导出失败") }
+            .onSuccess { result("講義包已導出") }.onFailure { result(it.message ?: "導出失败") }
     }
 }

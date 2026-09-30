@@ -26,6 +26,7 @@ interface SessionDao {
     @Query("UPDATE recording_sessions SET status=:status,positionMs=:position WHERE sessionId=:id") suspend fun state(id: String, status: String, position: Long)
     @Query("UPDATE recording_sessions SET audioPath=:path,mimeType=:mime WHERE sessionId=:id") suspend fun audio(id: String, path: String, mime: String)
     @Query("UPDATE recording_sessions SET exportUri=:uri WHERE sessionId=:id") suspend fun exportUri(id: String, uri: String)
+    @Query("UPDATE recording_sessions SET fileName=:name WHERE sessionId=:id") suspend fun fileName(id: String, name: String)
     @Query("UPDATE timeline_items SET state=:state WHERE id=:id") suspend fun itemState(id: String, state: String)
     @Query("UPDATE recording_sessions SET recordingId=:recordingId,status='COMPLETE' WHERE sessionId=:id") suspend fun completeSession(id: String, recordingId: Long)
     @Query("UPDATE timeline_items SET recordingId=:recordingId WHERE sessionId=:id") suspend fun attachItems(id: String, recordingId: Long)

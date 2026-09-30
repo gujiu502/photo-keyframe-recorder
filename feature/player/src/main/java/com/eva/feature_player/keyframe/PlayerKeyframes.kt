@@ -45,10 +45,10 @@ internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentP
     }
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("关键帧 ${items.size}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            TextButton(onClick = { items.lastOrNull { it.positionMs < currentPosition() - 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("上一帧") }
-            TextButton(onClick = { items.firstOrNull { it.positionMs > currentPosition() + 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("下一帧") }
-            TextButton(onClick = { export.launch("lecture-$id.zip") }, enabled = !exporting) { Text(if (exporting) "导出中" else "导出") }
+            Text("關鍵幀 ${items.size}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            TextButton(onClick = { items.lastOrNull { it.positionMs < currentPosition() - 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("上一幀") }
+            TextButton(onClick = { items.firstOrNull { it.positionMs > currentPosition() + 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("下一幀") }
+            TextButton(onClick = { export.launch("${title.replace(Regex("[\\\\/:*?\"<>|]"), "_")}.zip") }, enabled = !exporting) { Text(if (exporting) "導出中" else "導出") }
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(items, key = { it.id }) { item ->
@@ -56,12 +56,12 @@ internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentP
                     Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (item.type == "PHOTO") {
                             IconButton(onClick = { selected = item }, modifier = Modifier.size(80.dp)) {
-                                AsyncImage(File(requireNotNull(item.mediaPath)), "查看关键帧照片", modifier = Modifier.fillMaxSize())
+                                AsyncImage(File(requireNotNull(item.mediaPath)), "查看關鍵幀照片", modifier = Modifier.fillMaxSize())
                             }
                         }
                         Column(Modifier.padding(horizontal = 12.dp).weight(1f)) {
                             Text(formatPosition(item.positionMs), style = MaterialTheme.typography.titleMedium)
-                            Text(if (item.type == "PHOTO") "点时间播放 · 点图片放大" else "录音书签", style = MaterialTheme.typography.bodySmall)
+                            Text(if (item.type == "PHOTO") "點時間播放 · 點圖片放大" else "錄音書籤", style = MaterialTheme.typography.bodySmall)
                             if (item.text.isNotEmpty()) Text(item.text)
                         }
                     }
@@ -76,19 +76,19 @@ internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentP
             Surface(Modifier.fillMaxSize()) {
                 Column {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = { selected = null }) { Text("关闭") }
+                        TextButton(onClick = { selected = null }) { Text("關閉") }
                         TextButton(onClick = { onSeek(item.positionMs) }) { Text("播放 ${formatPosition(item.positionMs)}") }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth().clipToBounds().pointerInput(item.id) {
                         detectTransformGestures { _, pan, zoom, _ -> scale = (scale * zoom).coerceIn(1f, 5f); offset = if (scale == 1f) Offset.Zero else offset + pan }
                     }) {
-                        AsyncImage(File(requireNotNull(item.mediaPath)), "关键帧照片，可双指缩放", modifier = Modifier.fillMaxSize().graphicsLayer {
+                        AsyncImage(File(requireNotNull(item.mediaPath)), "關鍵幀照片，可雙指縮放", modifier = Modifier.fillMaxSize().graphicsLayer {
                             scaleX = scale; scaleY = scale; translationX = offset.x; translationY = offset.y
                         })
                     }
                     Row {
-                        TextButton(onClick = { items.takeWhile { it.id != item.id }.lastOrNull { it.type == "PHOTO" }?.let { selected = it; onSeek(it.positionMs) } }) { Text("上一帧") }
-                        TextButton(onClick = { items.dropWhile { it.id != item.id }.drop(1).firstOrNull { it.type == "PHOTO" }?.let { selected = it; onSeek(it.positionMs) } }) { Text("下一帧") }
+                        TextButton(onClick = { items.takeWhile { it.id != item.id }.lastOrNull { it.type == "PHOTO" }?.let { selected = it; onSeek(it.positionMs) } }) { Text("上一幀") }
+                        TextButton(onClick = { items.dropWhile { it.id != item.id }.drop(1).firstOrNull { it.type == "PHOTO" }?.let { selected = it; onSeek(it.positionMs) } }) { Text("下一幀") }
                     }
                 }
             }

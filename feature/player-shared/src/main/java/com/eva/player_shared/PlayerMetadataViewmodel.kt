@@ -108,7 +108,7 @@ class PlayerMetadataViewmodel @Inject constructor(
 
 	private fun shareCurrentAudioFile() = viewModelScope.launch {
 		_currentAudio.value?.let(shareRecording::shareAudioFile) ?: run {
-			_uiEvents.emit(UIEvents.ShowToast("Cannot share audio file"))
+			_uiEvents.emit(UIEvents.ShowToast("無法分享音訊"))
 		}
 	}
 

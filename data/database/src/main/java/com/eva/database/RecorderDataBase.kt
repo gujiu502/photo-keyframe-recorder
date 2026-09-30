@@ -28,7 +28,7 @@ import kotlinx.coroutines.asExecutor
 		com.eva.database.entity.RecordingSessionEntity::class,
 		com.eva.database.entity.TimelineItemEntity::class,
 	],
-	version = 7,
+	version = 8,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
@@ -72,7 +72,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 				)
 					.addTypeConverter(localtimeConvertor)
 					.addTypeConverter(localDateTimeConvertor)
-					.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7)
+					.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8)
 					.setQueryExecutor(Dispatchers.IO.asExecutor())
 					.build()
 					.also { db -> instance = db }
@@ -83,7 +83,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
 				.addTypeConverter(localtimeConvertor)
 				.addTypeConverter(localDateTimeConvertor)
-				.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7)
+				.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8)
 				.setQueryExecutor(Dispatchers.IO.asExecutor())
 				.build()
 		}

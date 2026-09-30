@@ -74,7 +74,7 @@ private fun AudioClipChip(
 		) {
 			Icon(
 				imageVector = Icons.Default.Remove,
-				contentDescription = "Subtract  Action",
+				contentDescription = "減少",
 				tint = contentColor,
 				modifier = Modifier.size(24.dp)
 			)
@@ -117,7 +117,7 @@ private fun AudioClipChip(
 		) {
 			Icon(
 				imageVector = Icons.Default.Add,
-				contentDescription = "Add Action",
+				contentDescription = "增加",
 				tint = contentColor,
 				modifier = Modifier.size(24.dp)
 			)

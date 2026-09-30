@@ -13,4 +13,5 @@ data class RecordingSessionEntity(
     val positionMs: Long = 0,
     val mimeType: String = "audio/mp4",
     val exportUri: String? = null,
+    val fileName: String? = null,
 )

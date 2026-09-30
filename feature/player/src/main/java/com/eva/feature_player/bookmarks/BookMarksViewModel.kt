@@ -121,7 +121,7 @@ internal class BookMarksViewModel @AssistedInject constructor(
 			}
 			when (result) {
 				is Resource.Error -> {
-					val message = result.message ?: result.error.message ?: "Cannot add bookmark"
+					val message = result.message ?: result.error.message ?: "無法保存書籤"
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
@@ -138,7 +138,7 @@ internal class BookMarksViewModel @AssistedInject constructor(
 			//show save toast
 			when (val result = bookmarksProvider.updateBookMark(bookmark, bookmarkText)) {
 				is Resource.Error -> {
-					val message = result.message ?: result.error.message ?: "Cannot add bookmark"
+					val message = result.message ?: result.error.message ?: "無法保存書籤"
 					_uiEvents.emit(UIEvents.ShowToast(message))
 				}
 
@@ -156,7 +156,7 @@ internal class BookMarksViewModel @AssistedInject constructor(
 			val result = bookmarksProvider.deleteBookMarks(bookMarkTime)
 			//show save toast
 			(result as? Resource.Error)?.let { res ->
-				val message = res.message ?: res.error.message ?: "Cannot add bookmark"
+				val message = res.message ?: res.error.message ?: "無法保存書籤"
 				_uiEvents.emit(UIEvents.ShowToast(message))
 			}
 		}
@@ -164,14 +164,14 @@ internal class BookMarksViewModel @AssistedInject constructor(
 
 	private fun exportBookMarks() = viewModelScope.launch {
 		val bookMarks = bookmarksProvider.getRecordingBookmarksFromIdAsList(audioId).ifEmpty {
-			_uiEvents.emit(UIEvents.ShowToast("No Bookmarks selected"))
+			_uiEvents.emit(UIEvents.ShowToast("請先選擇書籤"))
 			return@launch
 		}
 
 		val result = sharingUtil.shareBookmarksCsv(bookMarks)
 
 		(result as? Resource.Error)?.let { res ->
-			val message = res.message ?: res.error.message ?: "Cannot add bookmark"
+			val message = res.message ?: res.error.message ?: "無法保存書籤"
 			_uiEvents.emit(UIEvents.ShowToast(message))
 		}
 	}

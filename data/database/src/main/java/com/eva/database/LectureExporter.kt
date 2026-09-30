@@ -13,7 +13,7 @@ import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 
 class LectureExporter @Inject constructor(@ApplicationContext private val context: Context, private val sessions: SessionStore) {
-    suspend fun export(destination: Uri, audio: Uri?, recordingId: Long?, sessionId: String? = null, title: String = "Lecture") = withContext(Dispatchers.IO) {
+    suspend fun export(destination: Uri, audio: Uri?, recordingId: Long?, sessionId: String? = null, title: String = "講義") = withContext(Dispatchers.IO) {
         val session = sessionId?.let { sessions.dao.session(it) }
             ?: recordingId?.let { sessions.dao.forRecording(it).firstOrNull() }
         val items = session?.let { sessions.dao.items(it.sessionId) } ?: emptyList()
@@ -26,7 +26,7 @@ class LectureExporter @Inject constructor(@ApplicationContext private val contex
             markdown.append("## ${formatPosition(item.positionMs)}\n\n")
             if (item.type == "PHOTO") {
                 val file = File(requireNotNull(item.mediaPath))
-                check(file.isFile) { "A photo is missing; export was stopped" }
+                check(file.isFile) { "照片遺失，已停止導出" }
                 val path = "keyframes/${item.id}.jpg"
                 entry.put("mediaPath", path)
                 photoFiles += path to file
@@ -54,7 +54,7 @@ class LectureExporter @Inject constructor(@ApplicationContext private val contex
             zip.putNextEntry(ZipEntry(audioName))
             val audioStream = if (audio != null) context.contentResolver.openInputStream(audio)
                 else session?.audioPath?.let { File(it).takeIf(File::exists)?.inputStream() }
-            requireNotNull(audioStream) { "Audio file is missing" }.use { it.copyTo(zip) }
+            requireNotNull(audioStream) { "找不到音訊檔案" }.use { it.copyTo(zip) }
             zip.closeEntry()
             for ((path, file) in photoFiles) {
                 zip.putNextEntry(ZipEntry(path)); file.inputStream().use { it.copyTo(zip) }; zip.closeEntry()

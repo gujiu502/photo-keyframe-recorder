@@ -11,7 +11,7 @@
 1. 允许麦克风权限，开始录音。
 2. 点「拍照关键帧」，首次使用允许相机权限。快门记录此刻的音频毫秒位置；相机打开时录音继续。
 3. 暂停时也能拍照，照片标在暂停位置。
-4. 停止并保存录音，在录音列表打开播放器。
+4. 停止录音后输入文件名，自动附加 `yyyy-MM-dd_HH-mm-ss` 和音频扩展名；保存后在录音列表打开播放器。
 5. 点关键帧时间播放对应片段，点图片全屏查看；可用上一帧／下一帧。
 6. 点「导出」保存 ZIP 讲义包：音频、照片、`manifest.json`、`timeline.json`、`lecture.md`。
 
@@ -37,4 +37,4 @@
 
 签名文件保存在忽略的 `.signing/release.jks`。本地 `.signing/release.properties` 使用 `ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_PASSWORD`、`ANDROID_KEY_ALIAS` 三个字段；也可通过同名环境变量提供。GitHub 自动发布另需 `ANDROID_KEYSTORE_BASE64` secret。保留原签名密钥才能兼容以后升级，密钥不进入 Git。
 
-CI 运行编译、计时测试和 lint。设备工作流运行数据库迁移和持久化测试，以及 API 34 模拟器上的相机／录音流程。带 `v` 的标签生成签名 APK 和 SHA-256 校验文件。
+界面、通知和小工具使用中文。CI 运行中文文案检查、编译、计时／命名测试和 lint。设备工作流运行数据库迁移和持久化测试，以及 API 34 模拟器上的相机／录音／ZIP 导出流程。带 `v` 的标签生成签名 APK 和 SHA-256 校验文件。

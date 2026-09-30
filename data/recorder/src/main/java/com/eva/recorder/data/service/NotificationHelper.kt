@@ -71,11 +71,11 @@ internal class NotificationHelper(private val context: Context) {
 		)
 
 	private val stopRecorderPendingIntent: PendingIntent
-		get() = buildServicePendingIntent(
+		get() = buildActivityPendingIntent(
 			context = context,
 			requestCodes = IntentRequestCodes.STOP_VOICE_RECORDER,
-			intent = recorderServiceIntent.apply {
-				action = RecorderAction.StopRecorderAction.action
+			intent = recorderScreenIntent.apply {
+				putExtra("request_recording_name", true)
 			},
 		)
 

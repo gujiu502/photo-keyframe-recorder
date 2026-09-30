@@ -12,13 +12,15 @@ Recovery scans interrupted sessions and validates unfinished photo writes. It ne
 
 Trash retains metadata and photos. Permanent deletion clears attachments. Android 10 restoration remaps the original timeline to the new MediaStore ID. Auto Backup is disabled; explicit lecture export is the backup path. No Internet permission, telemetry, advertising or cloud service is added.
 
+Room 7 → 8 adds the chosen file name. Saving asks for a name and appends local date/time (`yyyy-MM-dd_HH-mm-ss`) and the encoder extension. MediaStore uses the UUID name only while reserving a destination; the URI is persisted before the file is renamed to the chosen name. Notification Stop opens the same naming prompt. UI resources, accessibility labels, notifications and widgets use Chinese; Bengali/Hindi resources are excluded from the APK.
+
 Automated checks:
 
-Verified locally on 2026-09-30: signed release and debug builds; Release lint (zero errors); one JVM clock test and four Android 11 instrumentation tests. The instrumentation persistence test also validates a ZIP export with 101 photo entries and JSON millisecond offsets. The device smoke flow passed on the debug build: three real CameraX captures (including two while paused), background reconnect, stop/save, and force-stop recovery.
+Verified locally on 2026-09-30: debug build; two JVM clock/naming tests and five Android 11 instrumentation tests. The instrumentation persistence test validates a ZIP export with 101 photo entries and JSON millisecond offsets. A real CameraX recording with three photos (including two while paused) was saved with the requested name and timestamp. Its ZIP was exported from the player through the Android document picker: ZIP CRCs, 3 JPEGs, 3 sorted timeline items, UTF-8 Markdown and audio SHA-256 identical to the original all passed. Signed release and lint are also checked before publication.
 
 - JVM: monotonic clock, repeated pause/resume, multiple pauses, two-hour and beyond-one-day offsets.
-- Android instrumentation: 6 → 7 migration preserving legacy bookmarks; 100 photos plus interrupted writes; invalid images; stable ordering; repeated finalization; attachment cleanup.
-- Device smoke script: actual CameraX capture, paused capture, background/reconnect, stop, force-stop recovery.
+- Android instrumentation: 6 → 7 and 7 → 8 migrations preserving legacy bookmarks and keyframes; 100 photos plus interrupted writes; invalid images; stable ordering; repeated finalization; attachment cleanup.
+- Device smoke script: actual CameraX capture, paused capture, background/reconnect, stop, filename validation and timestamp, ZIP export through the document picker with byte-for-byte audio comparison, force-stop recovery.
 - Release build, lint and APK signature verification.
 
 The first public APK is a preview. Two continuous hours of real microphone recording with 100 CameraX captures, physical-device interruptions, calls, headsets and low-storage fault injection require additional validation. Simulated two-hour offsets and 100 image-file writes do not prove the continuous-recording gate.

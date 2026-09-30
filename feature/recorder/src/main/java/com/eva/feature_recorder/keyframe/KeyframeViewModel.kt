@@ -25,7 +25,7 @@ class KeyframeViewModel @Inject constructor(val sessions: SessionStore, private 
     val items = sessions.activeId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else sessions.dao.observeSession(id) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val unfinished = sessions.dao.unfinished().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    init { viewModelScope.launch { runCatching { sessions.scanRecovery() }.onFailure { messages.emit("Recovery scan failed; data has been kept") } } }
+    init { viewModelScope.launch { runCatching { sessions.scanRecovery() }.onFailure { messages.emit("恢復檢查失敗，原始資料已保留") } } }
 
     fun capture(takePicture: (File, (Boolean) -> Unit) -> Unit, onDone: () -> Unit) {
         if (busy.value) return
@@ -38,14 +38,14 @@ class KeyframeViewModel @Inject constructor(val sessions: SessionStore, private 
                 val saved = suspendCancellableCoroutine<Boolean> { continuation ->
                     takePicture(sessions.tempFile(item)) { ok -> if (continuation.isActive) continuation.resumeWith(Result.success(ok)) }
                 }
-                check(saved) { "Photo failed; recording continues" }
+                check(saved) { "拍照失敗，錄音繼續" }
                 withContext(NonCancellable) { sessions.finishPhoto(item) }
-                messages.emit("Photo saved · ${com.eva.database.formatPosition(position)}")
+                messages.emit("照片已保存 · ${com.eva.database.formatPosition(position)}")
                 onDone()
             } catch (e: Exception) {
                 withContext(NonCancellable) { item?.let { sessions.failPhoto(it) } }
                 if (e is CancellationException) throw e
-                messages.emit(e.message ?: "Photo failed; recording continues")
+                messages.emit(e.message ?: "拍照失敗，錄音繼續")
             } finally { busy.value = false }
         }
     }
@@ -54,27 +54,27 @@ class KeyframeViewModel @Inject constructor(val sessions: SessionStore, private 
             try {
                 val session = sessions.dao.session(id) ?: return@withLock
                 if (session.status == "COMPLETE") return@withLock
-                check(id != sessions.activeId.value) { "This recording is still active" }
-                val file = File(requireNotNull(session.audioPath) { "No audio was recorded. Export photos or discard this session." })
+                check(id != sessions.activeId.value) { "這次錄音尚未停止" }
+                val file = File(requireNotNull(session.audioPath) { "尚無音訊，可導出照片或捨棄這次錄音。" })
                 withContext(Dispatchers.IO) {
                     MediaMetadataRetriever().use { reader ->
                         reader.setDataSource(file.absolutePath)
                         check((reader.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0) > 0) {
-                            "Interrupted audio cannot be played. Export the recovery package to keep the original files."
+                            "中斷的音訊無法播放，請導出恢復包以保留原始檔案。"
                         }
                     }
                 }
                 sessions.dao.state(id, "FINALIZING", session.positionMs)
                 audioFiles.transferFileDataToStorage(file, session.mimeType).getOrThrow()
-                messages.emit("Recovered recording and keyframes")
-            } catch (e: Exception) { messages.emit(e.message ?: "Recovery failed; original files were kept") }
+                messages.emit("已恢復錄音與照片關鍵幀")
+            } catch (e: Exception) { messages.emit(e.message ?: "恢復失敗，原始檔案已保留") }
         }
     }
     fun discard(id: String) = viewModelScope.launch {
-        lock.withLock { runCatching { sessions.discard(id) }.onFailure { messages.emit(it.message ?: "Cleanup failed") } }
+        lock.withLock { runCatching { sessions.discard(id) }.onFailure { messages.emit(it.message ?: "清理失敗") } }
     }
     fun exportRecovery(id: String, uri: Uri) = viewModelScope.launch {
-        runCatching { exporter.export(uri, null, null, id, "Recovered lecture") }
-            .onSuccess { messages.emit("Recovery package exported") }.onFailure { messages.emit(it.message ?: "Export failed") }
+        runCatching { exporter.export(uri, null, null, id, "恢復的講義") }
+            .onSuccess { messages.emit("已導出恢復包") }.onFailure { messages.emit(it.message ?: "導出失敗") }
     }
 }

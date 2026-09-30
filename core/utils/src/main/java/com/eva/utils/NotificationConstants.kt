@@ -13,18 +13,18 @@ object NotificationConstants {
 
 	// Recorder channel
 	const val RECORDER_CHANNEL_ID = "recorder_channel"
-	const val RECORDER_CHANNEL_NAME = "Recorder Channel"
+	const val RECORDER_CHANNEL_NAME = "錄音狀態"
 	const val RECORDER_CHANNEL_DESC =
-		"Channel to show notifications regarding the current running recorder"
+		"顯示目前錄音的狀態與控制按鈕"
 
 	// Player channel
 	const val PLAYER_CHANNEL_ID = "player_channel"
-	const val PLAYER_CHANNEL_NAME = "player_channel"
-	const val PLAYER_CHANNEL_DESC = "Channel to add the media playback"
+	const val PLAYER_CHANNEL_NAME = "音訊播放"
+	const val PLAYER_CHANNEL_DESC = "顯示音訊播放狀態"
 
 	// show recording channel
 	const val RECORDING_CHANNEL_ID = "recordings_channel"
-	const val RECORDING_CHANNEL_NAME = "Recordings"
+	const val RECORDING_CHANNEL_NAME = "錄音結果"
 	const val RECORDING_CHANNEL_DESC =
-		"Notifications related to completion and cancellation of recordings"
+		"顯示錄音完成與取消的通知"
 }

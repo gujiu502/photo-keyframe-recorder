@@ -49,17 +49,7 @@ internal fun FileSettingsTabContent(
 			)
 		}
 		item {
-			FileNamingFormat(
-				prefix = settings.name,
-				format = settings.format,
-				onFormatChange = { onEvent(FileSettingsChangeEvent.OnFormatChange(it)) }
-			)
-		}
-		item {
-			FilePrefixSelector(
-				prefix = settings.name,
-				onPrefixChange = { onEvent(FileSettingsChangeEvent.OnRecordingPrefixChange(it)) }
-			)
+			Text("錄音完成時輸入檔名，自動附加日期時間。", modifier = Modifier.padding(16.dp))
 		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 			item {

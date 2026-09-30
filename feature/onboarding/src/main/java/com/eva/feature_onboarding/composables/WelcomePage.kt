@@ -40,7 +40,7 @@ internal fun WelcomePage(
 		Image(
 			painter = painterResource(R.drawable.ic_microphone),
 			colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
-			contentDescription = "probable logo",
+			contentDescription = "應用程式圖示",
 			modifier = Modifier.size(128.dp),
 		)
 		Spacer(modifier = Modifier.height(12.dp))

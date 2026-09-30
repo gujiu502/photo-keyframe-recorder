@@ -43,7 +43,7 @@ internal class AudioPlayerNotification(
 					extras = bundleOf(
 						COMMAND_KEY_COMPACT_VIEW_INDEX to C.INDEX_UNSET
 					),
-					displayName = if (showPauseButton) "Paused" else "Play"
+					displayName = if (showPauseButton) "暫停" else "播放"
 				)
 			)
 		}

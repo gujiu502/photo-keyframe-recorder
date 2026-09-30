@@ -135,7 +135,7 @@ internal class VoiceRecorderService : LifecycleService() {
 			RecorderAction.StartRecorderAction.action -> onStartRecording()
 			RecorderAction.ResumeRecorderAction.action -> onResumeRecording()
 			RecorderAction.PauseRecorderAction.action -> onPauseRecording()
-			RecorderAction.StopRecorderAction.action -> onStopRecording()
+			RecorderAction.StopRecorderAction.action -> onStopRecording(intent.getStringExtra("recording_name"))
 			RecorderAction.CancelRecorderAction.action -> onCancelRecording()
 			RecorderAction.AddBookMarkAction.action -> addBookMark()
 		}
@@ -193,7 +193,7 @@ internal class VoiceRecorderService : LifecycleService() {
 					}
 				}
 			} catch (e: Exception) {
-				showSaveRecordingErrorMessage(e.message ?: "Could not start recording")
+				showSaveRecordingErrorMessage(e.message ?: "無法開始錄音")
 				sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) }
 				sessions.activeId.value = null
 				stopForeground(STOP_FOREGROUND_REMOVE)
@@ -248,13 +248,18 @@ internal class VoiceRecorderService : LifecycleService() {
 		}
 	}
 
-	private fun onStopRecording() {
+	private fun onStopRecording(name: String?) {
 		if (ending || starting || sessions.activeId.value == null) return
 		ending = true
 		heartbeat?.cancel()
 		// stop the recording
 		lifecycleScope.launch {
-			val result = try { voiceRecorder.stopRecording() } catch (e: Exception) { Result.failure(e) }
+			val result = try {
+				sessions.activeId.value?.let { id ->
+					sessions.dao.fileName(id, com.eva.recorder.domain.models.recordingFileStem(name ?: "錄音"))
+				}
+				voiceRecorder.stopRecording()
+			} catch (e: Exception) { Result.failure(e) }
 			result.fold(
 				onSuccess = { recordingId ->
 					clearBookMarks()
@@ -286,7 +291,7 @@ internal class VoiceRecorderService : LifecycleService() {
 		val position = sessions.position()
 		lifecycleScope.launch {
 			try { sessions.bookmark(position); _bookMarks.update { it + position } }
-			catch (e: Exception) { showSaveRecordingErrorMessage("Bookmark could not be saved") }
+			catch (e: Exception) { showSaveRecordingErrorMessage("無法保存書籤") }
 		}
 	}
 

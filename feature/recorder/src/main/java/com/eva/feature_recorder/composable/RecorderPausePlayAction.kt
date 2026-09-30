@@ -37,7 +37,7 @@ internal fun RecorderPausePlayAction(
 	onResume: () -> Unit,
 	onPause: () -> Unit,
 	onCancel: () -> Unit,
-	onStop: () -> Unit,
+	onStop: (String) -> Unit,
 	modifier: Modifier = Modifier,
 	enabled: Boolean = true,
 ) {

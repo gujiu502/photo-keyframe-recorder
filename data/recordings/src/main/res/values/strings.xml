@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="categories_create_success">Category Created Successfully</string>
-  <string name="categories_updated" translatable="false">Recordings moved to %s category.</string>
-  <string name="categories_deleted">Deleted Categories</string>
-  <string name="recordings_add_to_favourite_success">Favourites marked</string>
-  <string name="recordings_remove_favourite_failed">Favourites removed</string>
-  <string name="recording_delete_request_success">Recordings Deleted Successfully</string>
-  <string name="recording_delete_request_failed">Delete request failed</string>
-  <string name="rename_recording_success">Renamed Recording Successfully</string>
-  <string name="restore_recordings_success">Selected Recordings Restored</string>
-  <string name="recording_restore_request_failed">Restore failed</string>
-  <string name="recording_trash_request_success">Recordings Trashed</string>
-  <string name="recording_trash_request_failed">Cannot move recordings to trash</string>
+  <string name="categories_create_success">已建立分類</string>
+  <string name="categories_updated" translatable="false">錄音已移至「%s」分類。</string>
+  <string name="categories_deleted">已刪除分類</string>
+  <string name="recordings_add_to_favourite_success">已加入收藏</string>
+  <string name="recordings_remove_favourite_failed">已取消收藏</string>
+  <string name="recording_delete_request_success">已刪除錄音</string>
+  <string name="recording_delete_request_failed">刪除失敗</string>
+  <string name="rename_recording_success">已重新命名錄音</string>
+  <string name="restore_recordings_success">已還原選取的錄音</string>
+  <string name="recording_restore_request_failed">還原失敗</string>
+  <string name="recording_trash_request_success">錄音已移至回收桶</string>
+  <string name="recording_trash_request_failed">無法將錄音移至回收桶</string>
 </resources>

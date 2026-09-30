@@ -19,11 +19,12 @@ import javax.inject.Singleton
 class SessionStore @Inject constructor(@ApplicationContext private val context: Context, val database: RecorderDataBase) {
     val dao get() = database.sessionDao()
     val activeId = MutableStateFlow<String?>(null)
+    val namingRequested = MutableStateFlow(false)
     @Volatile var position: () -> Long = { 0L }
     private val root get() = File(context.filesDir, "keyframes").apply { mkdirs() }
 
     suspend fun start(): String = database.withTransaction {
-        check(activeId.value == null) { "A recording is already active" }
+        check(activeId.value == null) { "已有錄音正在進行" }
         val id = UUID.randomUUID().toString()
         dao.insertSession(RecordingSessionEntity(id, System.currentTimeMillis()))
         activeId.value = id
@@ -35,10 +36,10 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
             positionMs = positionMs, type = "BOOKMARK", state = "READY", createdAt = System.currentTimeMillis()))
     }
     suspend fun beginPhoto(positionMs: Long): TimelineItemEntity = withContext(Dispatchers.IO) {
-        val sessionId = activeId.value ?: error("Recording has ended")
-        val session = dao.session(sessionId) ?: error("Session missing")
-        check(session.status in listOf("ACTIVE", "PAUSED")) { "Recording is being saved" }
-        check(context.filesDir.usableSpace > 100L * 1024 * 1024) { "Storage is low. Audio has priority; photo was not saved." }
+        val sessionId = activeId.value ?: error("錄音已結束")
+        val session = dao.session(sessionId) ?: error("找不到錄音資料")
+        check(session.status in listOf("ACTIVE", "PAUSED")) { "錄音正在保存" }
+        check(context.filesDir.usableSpace > 100L * 1024 * 1024) { "儲存空間不足，優先保留錄音，照片未保存。" }
         val id = UUID.randomUUID().toString()
         val dir = File(root, sessionId).apply { check(mkdirs() || isDirectory) }
         val item = TimelineItemEntity(id, sessionId, positionMs = positionMs,
@@ -49,11 +50,11 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
     fun tempFile(item: TimelineItemEntity) = File(item.mediaPath + ".tmp")
     suspend fun finishPhoto(item: TimelineItemEntity): Unit = withContext(Dispatchers.IO) {
         val temp = tempFile(item)
-        check(validImage(temp)) { "Camera produced an invalid image" }
+        check(validImage(temp)) { "相機傳回的照片無效" }
         RandomAccessFile(temp, "rw").use { it.fd.sync() }
-        check(temp.renameTo(File(requireNotNull(item.mediaPath)))) { "Cannot save photo" }
+        check(temp.renameTo(File(requireNotNull(item.mediaPath)))) { "無法保存照片" }
         database.withTransaction {
-            val session = dao.session(item.sessionId) ?: error("Session cancelled")
+            val session = dao.session(item.sessionId) ?: error("錄音已取消")
             check(session.status != "CANCELLED")
             dao.putItem(item.copy(state = "READY", recordingId = session.recordingId))
         }
@@ -91,11 +92,11 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
         }
         val dir = File(root, id)
         check(dir.canonicalFile.parentFile == root.canonicalFile)
-        if (dir.exists()) check(dir.deleteRecursively()) { "Could not remove photos; retry cleanup" }
+        if (dir.exists()) check(dir.deleteRecursively()) { "無法刪除照片，請重試清理" }
         dao.session(id)?.audioPath?.let { path ->
             val file = File(path)
             check(file.canonicalFile.parentFile == File(context.filesDir, "temp_recordings").canonicalFile)
-            if (file.exists()) check(file.delete()) { "Could not remove audio" }
+            if (file.exists()) check(file.delete()) { "無法刪除音訊" }
         }
         dao.deleteSession(id)
         if (activeId.value == id) activeId.value = null

@@ -39,11 +39,20 @@ import com.eva.recorder.domain.models.RecorderState
 import java.io.File
 
 @Composable
-internal fun KeyframeTools(state: RecorderState, timer: () -> String, vm: KeyframeViewModel = hiltViewModel()) {
+internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: (com.eva.recorder.domain.models.RecorderAction) -> Unit, vm: KeyframeViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val photos by vm.items.collectAsStateWithLifecycle()
     val unfinished by vm.unfinished.collectAsStateWithLifecycle()
     val active by vm.sessions.activeId.collectAsStateWithLifecycle()
+    val namingRequested by vm.sessions.namingRequested.collectAsStateWithLifecycle()
+    LaunchedEffect(namingRequested, state) {
+        if (namingRequested && state == RecorderState.RECORDING) onAction(com.eva.recorder.domain.models.RecorderAction.PauseRecorderAction)
+    }
+    com.eva.feature_recorder.composable.SaveRecordingDialog(
+        showDialog = namingRequested && state == RecorderState.PAUSED && active != null,
+        onDismiss = { vm.sessions.namingRequested.value = false },
+        onSave = { onAction(com.eva.recorder.domain.models.RecorderAction.SaveRecorderAction(it)) },
+    )
     val busy by vm.busy.collectAsStateWithLifecycle()
     var showCamera by remember { mutableStateOf(false) }
     var discardId by remember { mutableStateOf<String?>(null) }
@@ -54,14 +63,14 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, vm: Keyfra
     }
     LaunchedEffect(vm) { vm.messages.collect { Toast.makeText(context, it, Toast.LENGTH_LONG).show() } }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) showCamera = true else Toast.makeText(context, "相机未授权，录音继续", Toast.LENGTH_LONG).show()
+        if (granted) showCamera = true else Toast.makeText(context, "相機未授權，錄音繼續", Toast.LENGTH_LONG).show()
     }
     if (showCamera && active != null) KeyframeCamera(timer, busy, vm, { showCamera = false })
     selectedPhoto?.let { path ->
         Dialog(onDismissRequest = { selectedPhoto = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface { Column {
-                TextButton(onClick = { selectedPhoto = null }) { Text("关闭照片") }
-                AsyncImage(File(path), "关键帧照片", modifier = Modifier.fillMaxWidth().heightIn(max = 650.dp))
+                TextButton(onClick = { selectedPhoto = null }) { Text("關閉照片") }
+                AsyncImage(File(path), "關鍵幀照片", modifier = Modifier.fillMaxWidth().heightIn(max = 650.dp))
             } }
         }
     }
@@ -72,15 +81,15 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, vm: Keyfra
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
                         showCamera = true else permission.launch(Manifest.permission.CAMERA)
                 }, enabled = active != null && !busy) {
-                    Icon(Icons.Default.CameraAlt, "拍照关键帧"); Spacer(Modifier.width(8.dp)); Text("拍照关键帧")
+                    Icon(Icons.Default.CameraAlt, "拍照關鍵幀"); Spacer(Modifier.width(8.dp)); Text("拍照關鍵幀")
                 }
                 Spacer(Modifier.width(12.dp))
-                Text("${photos.count { it.type == "PHOTO" }} 张照片", style = MaterialTheme.typography.labelLarge)
+                Text("${photos.count { it.type == "PHOTO" }} 張照片", style = MaterialTheme.typography.labelLarge)
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(photos.filter { it.type == "PHOTO" }, key = { it.id }) { item ->
                     Column(Modifier.clickable { selectedPhoto = item.mediaPath }) {
-                        AsyncImage(File(requireNotNull(item.mediaPath)), "关键帧 ${formatPosition(item.positionMs)}", modifier = Modifier.size(72.dp))
+                        AsyncImage(File(requireNotNull(item.mediaPath)), "關鍵幀 ${formatPosition(item.positionMs)}", modifier = Modifier.size(72.dp))
                         Text(formatPosition(item.positionMs).substringBefore('.'), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -89,20 +98,20 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, vm: Keyfra
         for (session in unfinished.filter { it.sessionId != active }) {
             Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("发现未完成的录音", style = MaterialTheme.typography.titleSmall)
-                    Text("原始音频和照片已保留。中断的音频可能需要导出后修复。", style = MaterialTheme.typography.bodySmall)
+                    Text("發現未完成的錄音", style = MaterialTheme.typography.titleSmall)
+                    Text("原始音頻和照片已保留。中斷的音頻可能需要導出後修復。", style = MaterialTheme.typography.bodySmall)
                     Row {
-                        TextButton(onClick = { vm.recover(session.sessionId) }) { Text("恢复") }
-                        TextButton(onClick = { recoveryExportId = session.sessionId; export.launch("recovery-${session.sessionId}.zip") }) { Text("导出原始文件") }
-                        TextButton(onClick = { discardId = session.sessionId }) { Text("丢弃") }
+                        TextButton(onClick = { vm.recover(session.sessionId) }) { Text("恢復") }
+                        TextButton(onClick = { recoveryExportId = session.sessionId; export.launch("recovery-${session.sessionId}.zip") }) { Text("導出原始文件") }
+                        TextButton(onClick = { discardId = session.sessionId }) { Text("丟棄") }
                     }
                 }
             }
         }
     }
-    discardId?.let { id -> AlertDialog(onDismissRequest = { discardId = null }, title = { Text("丢弃这次录音？") },
-        text = { Text("这会永久删除本次录音及照片。") },
-        confirmButton = { TextButton(onClick = { vm.discard(id); discardId = null }) { Text("删除") } },
+    discardId?.let { id -> AlertDialog(onDismissRequest = { discardId = null }, title = { Text("丟棄這次錄音？") },
+        text = { Text("這會永久刪除本次錄音及照片。") },
+        confirmButton = { TextButton(onClick = { vm.discard(id); discardId = null }) { Text("刪除") } },
         dismissButton = { TextButton(onClick = { discardId = null }) { Text("保留") } }) }
 }
 
@@ -132,7 +141,7 @@ private fun KeyframeCamera(timer: () -> String, busy: Boolean, vm: KeyframeViewM
                 preview.setSurfaceProvider(previewView.surfaceProvider)
                 val camera = provider!!.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture)
                 hasFlash = camera.cameraInfo.hasFlashUnit()
-            } catch (e: Exception) { error = "相机无法启动，录音继续。${e.localizedMessage ?: ""}" }
+            } catch (e: Exception) { error = "相機無法啟動，錄音繼續。${e.localizedMessage ?: ""}" }
         }, executor)
         onDispose { disposed = true; previewView.previewStreamState.removeObserver(observer); provider?.unbind(preview, capture) }
     }
@@ -140,14 +149,14 @@ private fun KeyframeCamera(timer: () -> String, busy: Boolean, vm: KeyframeViewM
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    IconButton(onClick = dismiss, enabled = !busy) { Icon(Icons.Default.Close, "返回录音") }
+                    IconButton(onClick = dismiss, enabled = !busy) { Icon(Icons.Default.Close, "返回錄音") }
                     if (hasFlash) IconButton(onClick = { flash = !flash; capture.flashMode = if (flash) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF }) {
-                        Icon(Icons.Default.FlashOn, if (flash) "关闭闪光灯" else "开启闪光灯")
+                        Icon(Icons.Default.FlashOn, if (flash) "關閉閃光燈" else "开啟閃光燈")
                     }
                 }
                 AndroidView(factory = { previewView }, modifier = Modifier.fillMaxWidth().weight(1f))
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
-                Text("录音进行中 / 暂停时保留位置 · ${timer()}", modifier = Modifier.padding(16.dp))
+                Text("錄音進行中 / 暫停時保留位置 · ${timer()}", modifier = Modifier.padding(16.dp))
                 Button(onClick = {
                     capture.targetRotation = previewView.display?.rotation ?: 0
                     vm.capture(takePicture = { file, result ->

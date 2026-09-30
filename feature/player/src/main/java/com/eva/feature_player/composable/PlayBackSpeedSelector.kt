@@ -96,7 +96,7 @@ fun PlayBackSpeedSelector(
 			) {
 				Icon(
 					painter = painterResource(R.drawable.ic_minus),
-					contentDescription = "Reduce speed",
+					contentDescription = "降低速度",
 					modifier = Modifier.size(24.dp),
 				)
 			}
@@ -115,7 +115,7 @@ fun PlayBackSpeedSelector(
 			) {
 				Icon(
 					painter = painterResource(R.drawable.ic_plus),
-					contentDescription = "Increase speed",
+					contentDescription = "提高速度",
 					modifier = Modifier.size(24.dp),
 				)
 			}
