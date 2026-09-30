@@ -1,4 +1,4 @@
 package com.eva.editor.domain.exceptions
 
 class TransformRunningException :
-	Exception("Some transformation is going on, try again after it completes")
+	Exception("正在處理音訊，請完成後再試")

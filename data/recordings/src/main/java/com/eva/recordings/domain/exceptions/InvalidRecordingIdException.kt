@@ -1,3 +1,3 @@
 package com.eva.recordings.domain.exceptions
 
-class InvalidRecordingIdException : Exception("Invalid recording id provided")
+class InvalidRecordingIdException : Exception("錄音編號無效")

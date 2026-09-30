@@ -1,3 +1,3 @@
 package com.eva.editor.domain.exceptions
 
-class AudioClipException : Exception("Minimum required clip duration is not satisfied")
+class AudioClipException : Exception("音訊片段太短")

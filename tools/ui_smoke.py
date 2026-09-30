@@ -19,8 +19,8 @@ def run(*command, check=True):
 
 
 def nodes():
-    output = run("shell", "uiautomator", "dump", "/sdcard/keyframe-smoke.xml")
-    if "ERROR" in output:
+    dumped = subprocess.run(adb + ["shell", "uiautomator", "dump", "/sdcard/keyframe-smoke.xml"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if dumped.returncode or "dumped to" not in (dumped.stdout + dumped.stderr).lower():
         return []
     root = ET.fromstring(run("shell", "cat", "/sdcard/keyframe-smoke.xml"))
     def propagate_disabled(node, enabled=True):

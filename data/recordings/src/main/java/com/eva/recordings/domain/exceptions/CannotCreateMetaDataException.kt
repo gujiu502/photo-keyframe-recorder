@@ -1,3 +1,3 @@
 package com.eva.recordings.domain.exceptions
 
-class CannotCreateMetaDataException : Exception("There is a problem with saving or creating this file")
+class CannotCreateMetaDataException : Exception("無法建立或保存此檔案")

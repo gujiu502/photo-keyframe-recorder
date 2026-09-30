@@ -1,3 +1,3 @@
 package com.com.visualizer.domain.exception
 
-class DecoderExistsException : Exception("Decoder is holding resources, clean it to run again")
+class DecoderExistsException : Exception("解碼器正在使用中，請稍後重試")

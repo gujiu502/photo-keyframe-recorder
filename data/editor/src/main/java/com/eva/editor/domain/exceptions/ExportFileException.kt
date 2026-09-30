@@ -1,3 +1,3 @@
 package com.eva.editor.domain.exceptions
 
-internal class ExportFileException : Exception("Export File cannot be created")
+internal class ExportFileException : Exception("無法建立導出檔案")

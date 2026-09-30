@@ -1,4 +1,4 @@
 package com.eva.location.domain.exceptions
 
 class CurrentLocationTimeoutException :
-	Exception("Cannot determine the current location in the given time,result in a timeout")
+	Exception("取得目前位置逾時")

@@ -1,3 +1,3 @@
 package com.eva.recordings.domain.exceptions
 
-class MediastoreOperationException : Exception("Issue eith media store operations")
+class MediastoreOperationException : Exception("無法存取裝置中的音訊檔案")

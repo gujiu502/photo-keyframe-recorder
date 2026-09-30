@@ -1,3 +1,3 @@
 package com.eva.interactions.domain.exception
 
-class TelephonyFeatureNotException : Exception("Telephony feature not available")
+class TelephonyFeatureNotException : Exception("此裝置不支援電話功能")

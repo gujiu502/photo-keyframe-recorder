@@ -1,3 +1,3 @@
 package com.eva.recordings.domain.exceptions
 
-class NoRecordingsModifiedOrDeletedException : Exception("No recording are modified or deleted")
+class NoRecordingsModifiedOrDeletedException : Exception("沒有錄音被修改或刪除")

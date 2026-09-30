@@ -1,4 +1,4 @@
 package com.eva.recorder.domain.exceptions
 
 class RecorderNotConfiguredException :
-	Exception("Recorder is not configured for recording ,please apply an file")
+	Exception("錄音器尚未準備完成")
