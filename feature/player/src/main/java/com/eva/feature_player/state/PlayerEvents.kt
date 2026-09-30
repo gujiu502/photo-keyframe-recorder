@@ -5,6 +5,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed interface PlayerEvents {
+	data class PlayFromPosition(val positionMs: Long) : PlayerEvents
 	data object OnStartPlayer : PlayerEvents
 	data object OnPausePlayer : PlayerEvents
 	data object OnMutePlayer : PlayerEvents

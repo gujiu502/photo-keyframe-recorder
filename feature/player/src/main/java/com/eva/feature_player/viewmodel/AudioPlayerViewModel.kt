@@ -95,6 +95,11 @@ internal class AudioPlayerViewModel @AssistedInject constructor(
 
 	fun onPlayerEvents(event: PlayerEvents) {
 		when (event) {
+			is PlayerEvents.PlayFromPosition -> viewModelScope.launch {
+				player.onSeekDuration(kotlin.time.Duration.parse("${event.positionMs}ms"))
+				player.startOrResumePlayer()
+			}
+
 			PlayerEvents.OnPausePlayer -> viewModelScope.launch { player.pausePlayer() }
 			PlayerEvents.OnStartPlayer -> viewModelScope.launch { player.startOrResumePlayer() }
 			is PlayerEvents.OnForwardByNDuration ->
