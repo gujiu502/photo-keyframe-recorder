@@ -25,8 +25,10 @@ import kotlinx.coroutines.asExecutor
 		RecordingsMetaDataEntity::class,
 		RecordingCategoryEntity::class,
 		RecordingBookMarkEntity::class,
+		com.eva.database.entity.RecordingSessionEntity::class,
+		com.eva.database.entity.TimelineItemEntity::class,
 	],
-	version = 6,
+	version = 7,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
@@ -42,6 +44,8 @@ import kotlinx.coroutines.asExecutor
 	],
 )
 abstract class RecorderDataBase : RoomDatabase() {
+
+	abstract fun sessionDao(): com.eva.database.dao.SessionDao
 
 	abstract fun trashMetadataEntityDao(): TrashFileDao
 
@@ -68,7 +72,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 				)
 					.addTypeConverter(localtimeConvertor)
 					.addTypeConverter(localDateTimeConvertor)
-					.addMigrations(DBMigrations.MIGRATE_5_6)
+					.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7)
 					.setQueryExecutor(Dispatchers.IO.asExecutor())
 					.build()
 					.also { db -> instance = db }
@@ -79,7 +83,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
 				.addTypeConverter(localtimeConvertor)
 				.addTypeConverter(localDateTimeConvertor)
-				.addMigrations(DBMigrations.MIGRATE_5_6)
+				.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7)
 				.setQueryExecutor(Dispatchers.IO.asExecutor())
 				.build()
 		}

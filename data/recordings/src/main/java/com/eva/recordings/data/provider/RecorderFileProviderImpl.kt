@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.os.bundleOf
+import androidx.room.withTransaction
 import com.eva.database.dao.RecordingsMetadataDao
 import com.eva.database.entity.RecordingsMetaDataEntity
 import com.eva.datastore.domain.enums.AudioFileNamingFormat
@@ -36,10 +37,11 @@ internal class RecorderFileProviderImpl(
 	private val context: Context,
 	private val recordingDao: RecordingsMetadataDao,
 	private val settings: RecorderFileSettingsRepo,
+	private val sessions: com.eva.database.SessionStore,
 ) : RecorderFileProvider {
 
 	private val _tempRecordingDir by lazy {
-		File(context.cacheDir, "temp_recordings")
+		File(context.filesDir, "temp_recordings")
 			.apply(File::mkdirs)
 	}
 
@@ -47,6 +49,10 @@ internal class RecorderFileProviderImpl(
 		return withContext(Dispatchers.IO) {
 			val ext = extension.takeIf { it?.startsWith(".") ?: false } ?: ".tmp"
 			val file = File.createTempFile("some_recordings", ext, _tempRecordingDir)
+			val active = sessions.dao.unfinishedList().lastOrNull { it.status == "ACTIVE" && it.audioPath == null }
+			active?.let { sessions.dao.audio(it.sessionId, file.absolutePath, when (extension) {
+				".opus", ".ogg" -> "audio/ogg"; ".amr" -> "audio/amr"; ".3gp" -> "audio/3gpp"; else -> "audio/mp4"
+			}) }
 			Log.d(LOGGER_TAG, "FILE CREATED FOR RECORDING NAME: ${file.name}")
 			file
 		}
@@ -61,20 +67,16 @@ internal class RecorderFileProviderImpl(
 					return@withContext Result.failure(Exception("File missing exception"))
 				}
 				// content uri cannot be created
-				val contentUri = createContentUriAndCopy(file, mimeType)
+				val session = sessions.dao.unfinishedList().firstOrNull { it.audioPath == file.absolutePath }
+				val contentUri = createContentUriAndCopy(file, mimeType, session?.sessionId, session?.exportUri)
 					?: return@withContext Result.failure(MediastoreOperationException())
 
 				val uriId = ContentUris.parseId(contentUri)
-				// launching a supervisor scope to ensure one error doesn't effect the other
-				supervisorScope {
-					val delTempFile = async { deleteCreatedFile(file) }
-					// save the secondary metadata
-					val otherMetadataDataUpdate = async {
-						val entity = RecordingsMetaDataEntity(recordingId = uriId)
-						recordingDao.updateOrInsertRecordingMetadata(entity)
-					}
-					awaitAll(otherMetadataDataUpdate, delTempFile)
+				sessions.database.withTransaction {
+					recordingDao.updateOrInsertRecordingMetadata(RecordingsMetaDataEntity(recordingId = uriId))
+					session?.let { sessions.dao.complete(it.sessionId, uriId) }
 				}
+				deleteCreatedFile(file)
 				return@withContext Result.success(uriId)
 			} catch (e: CancellationException) {
 				throw e
@@ -100,12 +102,13 @@ internal class RecorderFileProviderImpl(
 		}
 	}
 
-	private suspend fun createContentUriAndCopy(file: File, mimeType: String): Uri? {
+	private suspend fun createContentUriAndCopy(file: File, mimeType: String, sessionId: String?, existingUri: String?): Uri? {
 		return withContext(Dispatchers.IO) {
-			val contentUri = createUriForRecording(mimeType) ?: return@withContext null
+			val contentUri = existingUri?.let(Uri::parse) ?: createUriForRecording(mimeType, sessionId) ?: return@withContext null
+			sessionId?.let { sessions.dao.exportUri(it, contentUri.toString()) }
 			Log.d(LOGGER_TAG, "CONTENT URI CREATED")
 			try {
-				context.contentResolver.openOutputStream(contentUri, "w")?.use { outStream ->
+				requireNotNull(context.contentResolver.openOutputStream(contentUri, "wt")).use { outStream ->
 					file.inputStream().use { inStream -> inStream.copyTo(outStream) }
 				}
 				Log.d(LOGGER_TAG, "CONTENT COPIED")
@@ -116,18 +119,13 @@ internal class RecorderFileProviderImpl(
 				Log.d(LOGGER_TAG, "UPDATED URI AFTER COPY :${result == 1}")
 				contentUri
 			} catch (_: Exception) {
-				withContext(NonCancellable) {
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-						context.contentResolver.delete(contentUri, null)
-					else context.contentResolver.delete(contentUri, null, null)
-					Log.d(LOGGER_TAG, "CONTENT URI DELETED")
-				}
+				// Keep the reserved MediaStore URI and durable audio for an idempotent retry.
 				null
 			}
 		}
 	}
 
-	private suspend fun createUriForRecording(mimeType: String): Uri? {
+	private suspend fun createUriForRecording(mimeType: String, sessionId: String?): Uri? {
 		val fileSettings = settings.fileSettings()
 
 		val namingStrategy = when (fileSettings.format) {
@@ -144,7 +142,7 @@ internal class RecorderFileProviderImpl(
 		}
 
 		// file name
-		val fileName = buildString {
+		val fileName = if (sessionId != null) "Lecture-$sessionId.${android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "m4a"}" else buildString {
 			append(fileSettings.name)
 			append("-")
 			append(namingStrategy)
@@ -162,6 +160,15 @@ internal class RecorderFileProviderImpl(
 
 		// insert the metadata on IO thread
 		return withContext(Dispatchers.IO) {
+			if (sessionId != null) {
+				// Find a URI reserved before a crash, even if the DB write had not finished.
+				val args = bundleOf(ContentResolver.QUERY_ARG_SQL_SELECTION to "${MediaStore.Audio.Media.DISPLAY_NAME} = ? AND ${MediaStore.Audio.Media.OWNER_PACKAGE_NAME} = ?",
+					ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS to arrayOf(fileName, context.packageName))
+				if (Build.VERSION.SDK_INT >= 30) args.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+				context.contentResolver.query(RecordingsConstants.AUDIO_VOLUME_URI, arrayOf(MediaStore.Audio.Media._ID), args, null)?.use { cursor ->
+					if (cursor.moveToFirst()) return@withContext ContentUris.withAppendedId(RecordingsConstants.AUDIO_VOLUME_URI, cursor.getLong(0))
+				}
+			}
 			Log.d(LOGGER_TAG, "CREATING FILE WITH METADATA :$metaData")
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 				context.contentResolver.insert(RecordingsConstants.AUDIO_VOLUME_URI, metaData, null)

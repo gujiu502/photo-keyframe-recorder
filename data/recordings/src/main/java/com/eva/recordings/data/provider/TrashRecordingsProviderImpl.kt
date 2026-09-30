@@ -160,7 +160,7 @@ internal class TrashRecordingsProviderImpl(
 					// now delete the associated entries
 					val ids = recordings.map { it.id }
 					// now remove secondary data from the table
-					recordingsDao.deleteRecordingMetaDataFromIds(ids)
+					// Keep bookmarks, category and photos with the trashed recording.
 				} catch (e: Exception) {
 					e.printStackTrace()
 					val message = context.getString(R.string.recording_trash_request_failed)

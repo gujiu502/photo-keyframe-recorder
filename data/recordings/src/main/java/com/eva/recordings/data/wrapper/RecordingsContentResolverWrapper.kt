@@ -29,6 +29,11 @@ import kotlin.time.ExperimentalTime
 private const val TAG = "RECORDINGS_CONTENT_RESOLVER_WRAPPER"
 
 internal abstract class RecordingsContentResolverWrapper(private val context: Context) {
+	protected val sessionStore by lazy { com.eva.database.SessionStore(context, com.eva.database.RecorderDataBase.createDataBase(context)) }
+	protected suspend fun deleteTimeline(id: Long) {
+		sessionStore.deleteRecording(id)
+		sessionStore.database.recordingMetaData().deleteRecordingMetaDataFromIds(listOf(id))
+	}
 
 	@OptIn(ExperimentalTime::class)
 	val epochSeconds: Long
@@ -222,12 +227,14 @@ internal abstract class RecordingsContentResolverWrapper(private val context: Co
 				val results = recordingsUris.map { uri ->
 					async {
 						try {
-							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+							val rows = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
 								contentResolver.delete(uri, null)
-							else contentResolver.delete(uri, null, null)
+								else contentResolver.delete(uri, null, null)
+							check(rows == 1) { "Audio could not be deleted" }
+							deleteTimeline(ContentUris.parseId(uri))
 						} catch (e: Exception) {
-							if (e is SecurityException) throw e
 							Log.e(TAG, "SOME GENERAL EXCEPTION", e)
+							throw e
 						}
 					}
 				}
@@ -240,9 +247,10 @@ internal abstract class RecordingsContentResolverWrapper(private val context: Co
 	 * Permanently delete the given uri from the scoped storage
 	 * @param uri The uri to be deleted
 	 */
-	suspend fun permanentDeleteFromStorage(uri: Uri): Boolean {
+	suspend fun permanentDeleteFromStorage(uri: Uri, deleteAttachments: Boolean = true): Boolean {
 		return withContext(Dispatchers.IO) {
 			val rows = contentResolver.delete(uri, null, null)
+			if (rows == 1 && deleteAttachments) deleteTimeline(ContentUris.parseId(uri))
 			rows == 1
 		}
 	}

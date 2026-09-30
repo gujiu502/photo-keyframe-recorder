@@ -96,7 +96,7 @@ internal class TrashRecordingsProviderApi29Impl(
 						// restore from internal storage
 						restoreRecordingsDataFromTableAndFile(entity)
 						// delete from internal storage
-						removeBackupFileAndMetadata(entity)
+						removeBackupFileAndMetadata(entity, deleteAttachments = false)
 					}
 				}
 				// run all the operations together
@@ -106,7 +106,7 @@ internal class TrashRecordingsProviderApi29Impl(
 			val createSecondaryMetadata = recordings.map { model ->
 				RecordingsMetaDataEntity(model.id)
 			}
-			recordingsDao.updateOrInsertRecordingMetadataBulk(createSecondaryMetadata)
+			// Restored MediaStore IDs and their metadata were remapped during restoration.
 			Log.d(TAG, "TRASHED ITEMS RECOVERED")
 
 			val message = context.getString(R.string.restore_recordings_success)
@@ -134,7 +134,7 @@ internal class TrashRecordingsProviderApi29Impl(
 				}
 				// now remove secondary data
 				val ids = recordings.map { it.id }
-				recordingsDao.deleteRecordingMetaDataFromIds(ids)
+				// Preserve timeline and metadata until restore or permanent deletion.
 				val successMessage = context.getString(R.string.recording_trash_request_success)
 				emit(Resource.Success(emptyList(), message = successMessage))
 			} catch (e: Exception) {
@@ -210,19 +210,19 @@ internal class TrashRecordingsProviderApi29Impl(
 		trashMediaDao.addNewTrashFile(entry)
 		val isDeleteSuccess = try {
 			// delete the current recording info
-			permanentDeleteFromStorage(recording.fileUri.toUri())
+			permanentDeleteFromStorage(recording.fileUri.toUri(), deleteAttachments = false)
 		} catch (e: CancellationException) {
 			// if delete was cancelled then delete the file and the table entry
 			withContext(NonCancellable) {
 				Log.d(TAG, "FAILED TO DELETE FILE FROM THE STORAGE")
-				removeBackupFileAndMetadata(entry)
+				removeBackupFileAndMetadata(entry, deleteAttachments = false)
 			}
 			throw e
 		}
 
 		if (isDeleteSuccess) return
 		// if delete is unsuccessful so delete the file and the entry
-		removeBackupFileAndMetadata(entry)
+		removeBackupFileAndMetadata(entry, deleteAttachments = false)
 	}
 
 
@@ -230,7 +230,7 @@ internal class TrashRecordingsProviderApi29Impl(
 
 		val file = entity.file.toUri().toFile()
 
-		if (!file.exists()) return
+		check(file.exists()) { "Trash backup is missing; original metadata has been kept" }
 
 		val metaData = ContentValues().apply {
 			put(
@@ -251,16 +251,17 @@ internal class TrashRecordingsProviderApi29Impl(
 		try {
 			val newUri = withContext(Dispatchers.IO) {
 				contentResolver.insert(RecordingsConstants.AUDIO_VOLUME_URI, metaData)
-			} ?: return
+			} ?: error("Could not restore audio")
 
 			try {
 				withContext(Dispatchers.IO) {
-					contentResolver.openOutputStream(newUri, "w")?.use { stream ->
+					requireNotNull(contentResolver.openOutputStream(newUri, "w")).use { stream ->
 						// read the bytes and submit to the new uri
 						file.inputStream().use { inStream -> inStream.copyTo(stream) }
 						Log.d(TAG, "WRITTEN DATA FOR DATA : ${entity.id}")
 					}
 					contentResolver.update(newUri, updateMetaData, null, null)
+					sessionStore.remapRecording(entity.id, android.content.ContentUris.parseId(newUri))
 				}
 			} catch (e: CancellationException) {
 				withContext(NonCancellable) {
@@ -271,13 +272,15 @@ internal class TrashRecordingsProviderApi29Impl(
 			}
 		} catch (e: Exception) {
 			Log.e(TAG, "ISSUE IN CREATING NEW URI", e)
+			throw e
 		}
 
 	}
 
-	private suspend fun removeBackupFileAndMetadata(entity: TrashFileEntity): Boolean {
+	private suspend fun removeBackupFileAndMetadata(entity: TrashFileEntity, deleteAttachments: Boolean = true): Boolean {
 		return coroutineScope {
 			try {
+				if (deleteAttachments) deleteTimeline(entity.id)
 				val fileDeleteJob = async(Dispatchers.IO) {
 					try {
 						val file = entity.file.toUri().toFile()

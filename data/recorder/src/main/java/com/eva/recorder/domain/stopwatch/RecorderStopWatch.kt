@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.LocalTime
-import kotlin.time.Clock
+import android.os.SystemClock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
@@ -31,6 +31,8 @@ class RecorderStopWatch(
 ) {
 
 	private val scope = CoroutineScope(Dispatchers.Default)
+	private val clock = SessionClock(SystemClock::elapsedRealtime)
+	fun currentPositionMs(): Long = clock.positionMs()
 
 	private val _state = MutableStateFlow(RecorderState.IDLE)
 	val recorderState = _state.asStateFlow()
@@ -40,49 +42,45 @@ class RecorderStopWatch(
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val elapsedTime = _elapsedTime
 		.mapLatest { current -> LocalTime.fromMillisecondOfDay(current) }
-		.onStart { updateElapsedTime() }
 		.stateIn(
 			scope = scope,
 			started = SharingStarted.WhileSubscribed(5_000L),
 			initialValue = LocalTime(0, 0, 0)
 		)
 
+	init { updateElapsedTime() }
+
 	@OptIn(ExperimentalCoroutinesApi::class)
 	private fun updateElapsedTime() = _state
 		.flatMapLatest { state -> runStopWatch(isRunning = state == RecorderState.RECORDING) }
-		.onEach { add -> _elapsedTime.update { prev -> prev + add } }
+		.onEach { _elapsedTime.value = (clock.positionMs() % 86_400_000).toInt() }
 		.launchIn(scope)
 
 
 	@OptIn(ExperimentalTime::class)
 	private fun runStopWatch(isRunning: Boolean): Flow<Int> = flow {
-		var previous = Clock.System.now()
 		while (isRunning) {
-			val now = Clock.System.now()
-			if (now > previous) {
-				val diff = now.minus(previous)
-				val diffInMillis = diff.toInt(DurationUnit.MILLISECONDS)
-				emit(diffInMillis)
-			}
-			previous = Clock.System.now()
+			emit(0)
 			delay(delayTime)
 		}
 	}.flowOn(Dispatchers.Default)
 
 
-	fun startOrResume() = _state.update { RecorderState.RECORDING }
+	fun startOrResume() { clock.resume(); _state.value = RecorderState.RECORDING }
 
-	fun pause() = _state.update { RecorderState.PAUSED }
+	fun pause() { clock.pause(); _state.value = RecorderState.PAUSED }
 
-	fun prepare() = _state.update { RecorderState.PREPARING }
+	fun prepare() { clock.start(); clock.pause(); _state.value = RecorderState.PREPARING }
 
 	fun stop() {
+		clock.pause()
 		// completes the timer and reset the elapsed time
 		_state.update { RecorderState.COMPLETED }
 		_elapsedTime.update { 0 }
 	}
 
 	fun cancel() {
+		clock.pause()
 		// cancel the current run
 		_state.update { RecorderState.CANCELLED }
 		_elapsedTime.update { 0 }

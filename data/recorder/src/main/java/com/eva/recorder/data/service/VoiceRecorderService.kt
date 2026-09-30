@@ -60,15 +60,19 @@ internal class VoiceRecorderService : LifecycleService() {
 	@Inject
 	lateinit var notificationHelper: NotificationHelper
 
+	@Inject lateinit var sessions: com.eva.database.SessionStore
+	private var ending = false
+	private var starting = false
+	private var heartbeat: kotlinx.coroutines.Job? = null
+
 	private val binder = LocalBinder()
 
-	private val _bookMarks = MutableStateFlow(emptySet<LocalTime>())
+	private val _bookMarks = MutableStateFlow(emptySet<Long>())
 
 	@OptIn(ExperimentalCoroutinesApi::class)
 	val bookMarks = _bookMarks.mapLatest { bookMarks ->
 		// convert it to set such that common items are subtracted
-		bookMarks.map(LocalTime::roundToClosestSeconds)
-			.map(LocalTime::toDuration)
+		bookMarks.map { it.milliseconds }
 			.toSet()
 	}
 
@@ -175,13 +179,26 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onStartRecording() {
-		//start the recorder
-		lifecycleScope.launch { voiceRecorder.startRecording() }.invokeOnCompletion {
-			// start foreground service
-			startVoiceRecorderService(
-				NotificationConstants.RECORDER_NOTIFICATION_ID,
-				notificationHelper.timerNotification
-			)
+		if (starting || ending || sessions.activeId.value != null) return
+		starting = true
+		startVoiceRecorderService(NotificationConstants.RECORDER_NOTIFICATION_ID, notificationHelper.timerNotification)
+		lifecycleScope.launch {
+			try {
+				voiceRecorder.startRecording()
+				heartbeat = lifecycleScope.launch {
+					while (true) {
+						kotlinx.coroutines.delay(5000)
+						val id = sessions.activeId.value ?: break
+						sessions.dao.state(id, if (recorderState.value == RecorderState.PAUSED) "PAUSED" else "ACTIVE", sessions.position())
+					}
+				}
+			} catch (e: Exception) {
+				showSaveRecordingErrorMessage(e.message ?: "Could not start recording")
+				sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) }
+				sessions.activeId.value = null
+				stopForeground(STOP_FOREGROUND_REMOVE)
+				stopSelf()
+			} finally { starting = false }
 		}
 	}
 
@@ -192,6 +209,7 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onResumeRecording() {
+		if (ending || starting || sessions.activeId.value == null) return
 		//update the notification
 		notificationHelper.setOnResumeNotification()
 		//resume recording
@@ -201,6 +219,7 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onPauseRecording() {
+		if (ending || starting || sessions.activeId.value == null) return
 		//update the notification
 		notificationHelper.setOnPauseNotification()
 		//pause recording
@@ -210,6 +229,9 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onCancelRecording() {
+		if (ending || starting || sessions.activeId.value == null) return
+		ending = true
+		heartbeat?.cancel()
 		lifecycleScope.launch {
 			// cancel recording
 			voiceRecorder.cancelRecording()
@@ -219,6 +241,7 @@ internal class VoiceRecorderService : LifecycleService() {
 			widgetFacade.resetWidget()
 		}.invokeOnCompletion {
 			// stop the foreground
+			ending = false
 			stopForeground(STOP_FOREGROUND_REMOVE)
 			// stop the service
 			stopSelf()
@@ -226,16 +249,22 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun onStopRecording() {
+		if (ending || starting || sessions.activeId.value == null) return
+		ending = true
+		heartbeat?.cancel()
 		// stop the recording
 		lifecycleScope.launch {
-			val timeBeforeSave = voiceRecorder.recorderTimer.value
-			voiceRecorder.stopRecording().fold(
+			val result = try { voiceRecorder.stopRecording() } catch (e: Exception) { Result.failure(e) }
+			result.fold(
 				onSuccess = { recordingId ->
-					clearAndSaveBookMarks(recordingId, timeBeforeSave)
+					clearBookMarks()
+					sessions.activeId.value = null
 					// again show the notification
 					notificationHelper.showCompletedNotificationWithIntent(recordingId)
 				},
 				onFailure = { error ->
+					sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) }
+					sessions.activeId.value = null
 					val message = error.message ?: ""
 					showSaveRecordingErrorMessage(message)
 				},
@@ -244,6 +273,7 @@ internal class VoiceRecorderService : LifecycleService() {
 			widgetFacade.resetWidget()
 		}.invokeOnCompletion {
 			//clear and save bookmarks
+			ending = false
 			// stop the foreground
 			stopForeground(STOP_FOREGROUND_REMOVE)
 			// stop the service
@@ -252,52 +282,12 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	private fun addBookMark() {
-		val timeWhenClicked = voiceRecorder.recorderTimer.value
-		//should be a multiple of 100
-		val closestSecond = timeWhenClicked.roundToClosestSeconds()
-		if (closestSecond <= timeWhenClicked) {
-			// add it to bookmarks
-			Log.d(LOGGER_TAG, "BOOKMARKS ADDED :$closestSecond")
-			_bookMarks.update { it + closestSecond }
+		if (ending || sessions.activeId.value == null) return
+		val position = sessions.position()
+		lifecycleScope.launch {
+			try { sessions.bookmark(position); _bookMarks.update { it + position } }
+			catch (e: Exception) { showSaveRecordingErrorMessage("Bookmark could not be saved") }
 		}
-	}
-
-	private suspend fun clearAndSaveBookMarks(
-		recordingId: Long,
-		lastRecordedTime: LocalTime,
-	) {
-		// no need to perform any actions if bookmarks is empty
-		if (_bookMarks.value.isEmpty()) return
-		// add the coroutines on a different coroutine
-		val job = lifecycleScope.launch {
-			// filter the bookmarks
-			val bookmarks = _bookMarks.value
-				.filter { it <= lastRecordedTime }
-				.map { it.roundToClosestSeconds() }
-				.toSet()
-
-			Log.d(LOGGER_TAG, "SAVING ${bookmarks.size} BOOKMARKS ")
-
-			val result = bookmarksProvider.createBookMarks(
-				recordingId = recordingId,
-				points = bookmarks
-			)
-			when (result) {
-				is Resource.Error -> {
-					val message = result.message ?: result.error.message ?: "ERROR"
-					Log.wtf(LOGGER_TAG, message)
-				}
-
-				is Resource.Success -> showBookmarksSavedMessage()
-				else -> {}
-			}
-		}
-		Log.d(LOGGER_TAG, "BOOKMARKS SAVED")
-		// add logic to save bookmarks
-		Log.d(LOGGER_TAG, "BOOKMARKS CLEARED")
-		_bookMarks.update { emptySet() }
-		// waits for the job completion
-		job.join()
 	}
 
 	private fun clearBookMarks() {

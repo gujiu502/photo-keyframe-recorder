@@ -21,7 +21,7 @@ internal class RecorderActionHandlerImpl(
 		val intent = serviceIntent.apply {
 			action = RecorderAction.StartRecorderAction.action
 		}
-		context.startService(intent)
+		androidx.core.content.ContextCompat.startForegroundService(context, intent)
 	}
 
 	private fun resumeRecorder() {

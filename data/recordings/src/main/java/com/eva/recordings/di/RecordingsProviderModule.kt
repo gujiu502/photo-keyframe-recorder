@@ -87,7 +87,8 @@ object RecordingsProviderModule {
 		@ApplicationContext context: Context,
 		recordingsDao: RecordingsMetadataDao,
 		settings: RecorderFileSettingsRepo,
-	): RecorderFileProvider = RecorderFileProviderImpl(context, recordingsDao, settings)
+		sessions: com.eva.database.SessionStore,
+	): RecorderFileProvider = RecorderFileProviderImpl(context, recordingsDao, settings, sessions)
 
 	@Provides
 	@Singleton

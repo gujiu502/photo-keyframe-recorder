@@ -20,6 +20,18 @@ private const val TEST_DB_NAME = "migration-test-db"
 @RunWith(AndroidJUnit4::class)
 class DBMigrationsTests {
 
+	@Test fun migrate_6_to_7_preserves_bookmarks_and_recordings() {
+		val db = testHelper.createDatabase("keyframe-migration", 6)
+		db.execSQL("INSERT INTO recording_meta_data (RECORDING_ID, IS_FAVOURITE) VALUES (99, 1)")
+		db.execSQL("INSERT INTO recording_bookmark_table (BOOKMARK_ID, BOOKMARK_TEXT, RECORDING_ID, BOOKMARK_TIMESTAMP) VALUES (99, 'legacy', 99, 871420)")
+		db.close()
+		val migrated = testHelper.runMigrationsAndValidate("keyframe-migration", 7, true, DBMigrations.MIGRATE_6_7)
+		migrated.query("SELECT BOOKMARK_TIMESTAMP FROM recording_bookmark_table WHERE BOOKMARK_ID=99").use {
+			assertTrue(it.moveToFirst()); assertEquals(871420L, it.getLong(0))
+		}
+		migrated.close()
+	}
+
 	@get:Rule
 	val testHelper = MigrationTestHelper(
 		instrumentation = InstrumentationRegistry.getInstrumentation(),

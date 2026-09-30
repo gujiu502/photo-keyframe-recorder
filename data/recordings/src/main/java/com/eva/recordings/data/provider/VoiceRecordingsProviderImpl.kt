@@ -173,6 +173,7 @@ internal class VoiceRecordingsProviderImpl(
 		return withContext(Dispatchers.IO) {
 			try {
 				val deleteRow = contentResolver.delete(uri.toUri(), null, null)
+				if (deleteRow == 1) deleteTimeline(android.content.ContentUris.parseId(uri.toUri()))
 				return@withContext if (deleteRow == 1)
 					Resource.Success<Unit, Exception>(
 						data = Unit,
@@ -209,6 +210,7 @@ internal class VoiceRecordingsProviderImpl(
 					selectionArgs
 				)
 
+				if (deleteRow == 1) deleteTimeline(id)
 				return@withContext if (deleteRow == 1)
 					Resource.Success(
 						data = Unit,

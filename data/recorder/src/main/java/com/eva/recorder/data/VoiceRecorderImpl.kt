@@ -42,11 +42,14 @@ internal class VoiceRecorderImpl(
 	private val fileProvider: RecorderFileProvider,
 	private val settings: RecorderAudioSettingsRepo,
 	private val locationProvider: LocationProvider,
+	private val sessions: com.eva.database.SessionStore,
 ) : VoiceRecorder {
 
 	private val sampleTime = RecorderConstants.AMPS_READ_DELAY_RATE
 
 	private val _stopWatch = RecorderStopWatch(delayTime = sampleTime)
+
+	init { sessions.position = _stopWatch::currentPositionMs }
 
 	private val _pcmReader by lazy {
 		AudioRecordAmplitudeReader(
@@ -148,6 +151,9 @@ internal class VoiceRecorderImpl(
 		Log.d(TAG, "DEFERRED CALL ARE READY")
 
 		_recordingFile = fileDeferred.await()
+		sessions.activeId.value?.let { id ->
+			_recordingFile?.let { sessions.dao.audio(id, it.absolutePath, format.mimeType) }
+		}
 
 		val locationResult = locationDeferred.await()
 		// log if any location error
@@ -230,15 +236,16 @@ internal class VoiceRecorderImpl(
 				return@tryWithLock
 			}
 			_stopWatch.prepare()
+			sessions.start()
 			Log.i(TAG, "PREPARING FILE FOR RECORDING")
 			initiateRecorderParams()
 			// prepare the recorder
 			_recorder?.prepare()
 			Log.d(TAG, "RECORDER PREPARED")
 			//start the recorder
-			_stopWatch.startOrResume()
 			_pcmReader.startRecorder()
 			_recorder?.start()
+			_stopWatch.startOrResume()
 			Log.d(TAG, "RECORDER STARTED")
 		}
 	}
@@ -247,6 +254,7 @@ internal class VoiceRecorderImpl(
 		// staring an operation lock it
 		return _lock.withLock(this) {
 			val file = _recordingFile ?: return Result.failure(RecorderNotConfiguredException())
+			sessions.activeId.value?.let { sessions.dao.state(it, "FINALIZING", _stopWatch.currentPositionMs()) }
 			// reset the timer
 			Log.d(TAG, "STOPWATCH STOPPED")
 			_stopWatch.stop()
@@ -264,9 +272,9 @@ internal class VoiceRecorderImpl(
 			try {
 				//pause recorder
 				Log.d(TAG, "STOPWATCH PAUSED")
-				_stopWatch.pause()
-				//pause recorder
 				_recorder?.pause()
+				_stopWatch.pause()
+				sessions.activeId.value?.let { sessions.dao.state(it, "PAUSED", _stopWatch.currentPositionMs()) }
 				Log.d(TAG, "RECORDER PAUSED")
 			} catch (e: IOException) {
 				e.printStackTrace()
@@ -279,9 +287,9 @@ internal class VoiceRecorderImpl(
 			try {
 				//resume stopwatch
 				Log.d(TAG, "STOPWATCH RESUMED")
-				_stopWatch.startOrResume()
-				//resume recorder
 				_recorder?.resume()
+				_stopWatch.startOrResume()
+				sessions.activeId.value?.let { sessions.dao.state(it, "ACTIVE", _stopWatch.currentPositionMs()) }
 				Log.d(TAG, "RECORDER RESUMED")
 			} catch (e: IOException) {
 				e.printStackTrace()
@@ -298,9 +306,10 @@ internal class VoiceRecorderImpl(
 				_stopWatch.cancel()
 				//stop the ongoing recording
 				Log.d(TAG, "RECORDER STOPPED")
-				_recorder?.stop()
+				runCatching { _recorder?.stop() }
 				// delete the current recording
 				stopAndDeleteFileMetaData()
+				sessions.activeId.value?.let { sessions.discard(it) }
 				Log.d(TAG, "RECORDER STOPPED")
 			} catch (e: Exception) {
 				e.printStackTrace()
@@ -309,16 +318,9 @@ internal class VoiceRecorderImpl(
 	}
 
 	override fun releaseResources() {
-		// delete the recording file if its exits
 		try {
-			val file = _recordingFile ?: return
-			// run blocking as we want to run this blocking code in the IO thread.
-			runBlocking {
-				withContext(NonCancellable) {
-					Log.d(TAG, "CLEARING THE FILE AS RECORDER CLEAR METHOD IS CALLED")
-					fileProvider.deleteCreatedFile(file)
-				}
-			}
+			// An interrupted recording must remain available to recovery.
+			sessions.activeId.value = null
 		} finally {
 			//set recording file to null
 			_recordingFile = null

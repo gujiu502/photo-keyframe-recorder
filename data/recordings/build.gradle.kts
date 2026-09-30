@@ -12,6 +12,7 @@ android {
 }
 
 dependencies {
+	implementation(libs.androidx.room.ktx)
 	// activity
 	implementation(libs.androidx.activity.compose)
 	//local

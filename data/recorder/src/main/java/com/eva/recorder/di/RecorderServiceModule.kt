@@ -25,11 +25,13 @@ internal object RecorderServiceModule {
 		fileProvider: RecorderFileProvider,
 		settings: RecorderAudioSettingsRepo,
 		locationProvider: LocationProvider,
+		sessions: com.eva.database.SessionStore,
 	): VoiceRecorder = VoiceRecorderImpl(
 		context = context,
 		fileProvider = fileProvider,
 		settings = settings,
-		locationProvider = locationProvider
+		locationProvider = locationProvider,
+		sessions = sessions,
 	)
 
 	@Provides
