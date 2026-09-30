@@ -81,7 +81,7 @@ internal fun RecorderPausePlayAction(
 				) {
 					Icon(
 						painter = painterResource(id = R.drawable.ic_play),
-						contentDescription = stringResource(id = R.string.action_paused)
+						contentDescription = stringResource(id = R.string.recorder_action_resume)
 					)
 				}
 			} else {
