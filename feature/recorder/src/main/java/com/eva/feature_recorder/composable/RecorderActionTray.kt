@@ -75,7 +75,7 @@ internal fun AnimatedRecorderActionTray(
 					onResume = { onRecorderAction(RecorderAction.ResumeRecorderAction) },
 					onPause = { onRecorderAction(RecorderAction.PauseRecorderAction) },
 					onCancel = { onRecorderAction(RecorderAction.CancelRecorderAction) },
-					onStop = { onRecorderAction(RecorderAction.SaveRecorderAction(it)) },
+					onStop = { name, course -> onRecorderAction(RecorderAction.SaveRecorderAction(name, course)) },
 					modifier = Modifier.fillMaxWidth()
 				)
 			}

@@ -135,7 +135,7 @@ internal class VoiceRecorderService : LifecycleService() {
 			RecorderAction.StartRecorderAction.action -> onStartRecording()
 			RecorderAction.ResumeRecorderAction.action -> onResumeRecording()
 			RecorderAction.PauseRecorderAction.action -> onPauseRecording()
-			RecorderAction.StopRecorderAction.action -> onStopRecording(intent.getStringExtra("recording_name"))
+			RecorderAction.StopRecorderAction.action -> onStopRecording(intent.getStringExtra("recording_name"), intent.getStringExtra("course_name") ?: "未分類")
 			RecorderAction.CancelRecorderAction.action -> onCancelRecording()
 			RecorderAction.AddBookMarkAction.action -> addBookMark()
 		}
@@ -248,7 +248,7 @@ internal class VoiceRecorderService : LifecycleService() {
 		}
 	}
 
-	private fun onStopRecording(name: String?) {
+	private fun onStopRecording(name: String?, course: String) {
 		if (ending || starting || sessions.activeId.value == null) return
 		ending = true
 		heartbeat?.cancel()
@@ -256,6 +256,9 @@ internal class VoiceRecorderService : LifecycleService() {
 		lifecycleScope.launch {
 			val result = try {
 				sessions.activeId.value?.let { id ->
+					val courseName = course.trim().ifEmpty { "未分類" }
+					check(com.eva.recorder.domain.models.isValidRecordingName(courseName)) { "課程名稱無效" }
+					sessions.dao.course(id, courseName)
 					sessions.dao.fileName(id, com.eva.recorder.domain.models.recordingFileStem(name ?: "錄音"))
 				}
 				voiceRecorder.stopRecording()

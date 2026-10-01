@@ -38,10 +38,11 @@ internal class RecorderActionHandlerImpl(
 		context.startService(intent)
 	}
 
-	private fun stopRecorder(name: String? = null) {
+	private fun stopRecorder(name: String? = null, course: String = "未分類") {
 		val intent = serviceIntent.apply {
 			action = RecorderAction.StopRecorderAction.action
 			putExtra("recording_name", name)
+			putExtra("course_name", course)
 		}
 		context.startService(intent)
 	}
@@ -67,7 +68,7 @@ internal class RecorderActionHandlerImpl(
 				RecorderAction.ResumeRecorderAction -> resumeRecorder()
 				RecorderAction.PauseRecorderAction -> pauseRecorder()
 				RecorderAction.StopRecorderAction -> stopRecorder()
-				is RecorderAction.SaveRecorderAction -> stopRecorder(action.name)
+				is RecorderAction.SaveRecorderAction -> stopRecorder(action.name, action.course)
 				RecorderAction.CancelRecorderAction -> cancelRecording()
 				RecorderAction.AddBookMarkAction -> addBookMarkAction()
 			}

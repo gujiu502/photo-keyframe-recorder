@@ -7,6 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SessionDao {
+    @Query("SELECT * FROM recording_sessions WHERE status='COMPLETE'") fun completed(): Flow<List<RecordingSessionEntity>>
+    @Query("SELECT * FROM recording_sessions WHERE status='COMPLETE'") suspend fun completedList(): List<RecordingSessionEntity>
+    @Query("SELECT EXISTS(SELECT 1 FROM recording_sessions WHERE status IN ('ACTIVE','PAUSED','FINALIZING'))") suspend fun recordingBusy(): Boolean
+    @Query("UPDATE recording_sessions SET courseName=:course WHERE sessionId=:id") suspend fun course(id: String, course: String)
     @Query("SELECT * FROM timeline_items WHERE type='PHOTO' AND state IN ('WRITING','READY')") suspend fun photosToValidate(): List<TimelineItemEntity>
     @Insert suspend fun insertSession(session: RecordingSessionEntity)
     @Upsert suspend fun putItem(item: TimelineItemEntity)

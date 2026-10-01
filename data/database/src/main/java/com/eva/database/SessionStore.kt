@@ -23,10 +23,12 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
     @Volatile var position: () -> Long = { 0L }
     private val root get() = File(context.filesDir, "keyframes").apply { mkdirs() }
 
-    suspend fun start(): String = database.withTransaction {
+    suspend fun start(requireAccount: Boolean = true): String = database.withTransaction {
+        check(!AccountSettings(context).prefs.getBoolean("install_committed", false)) { "正在安裝更新，請稍後開始錄音" }
+        if (requireAccount) check(AccountSettings(context).recordingAllowed) { "請先完成 Google 帳號與 Drive 設定，或完成必要更新" }
         check(activeId.value == null) { "已有錄音正在進行" }
         val id = UUID.randomUUID().toString()
-        dao.insertSession(RecordingSessionEntity(id, System.currentTimeMillis()))
+        dao.insertSession(RecordingSessionEntity(id, System.currentTimeMillis(), accountId = AccountSettings(context).accountId))
         activeId.value = id
         id
     }
@@ -93,6 +95,9 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
         val dir = File(root, id)
         check(dir.canonicalFile.parentFile == root.canonicalFile)
         if (dir.exists()) check(dir.deleteRecursively()) { "無法刪除照片，請重試清理" }
+        val cloudMetadata = File(context.filesDir, "cloud-metadata/$id")
+        check(cloudMetadata.canonicalFile.parentFile == File(context.filesDir, "cloud-metadata").canonicalFile)
+        if (cloudMetadata.exists()) check(cloudMetadata.deleteRecursively()) { "無法清理本地備份中繼資料，請重試" }
         dao.session(id)?.audioPath?.let { path ->
             val file = File(path)
             check(file.canonicalFile.parentFile == File(context.filesDir, "temp_recordings").canonicalFile)

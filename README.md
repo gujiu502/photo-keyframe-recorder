@@ -21,20 +21,22 @@
 
 基于 [tuuhin/RecorderApp v1.4.4](https://github.com/tuuhin/RecorderApp/tree/v1.4.4)，沿用其录音器、播放器、波形、书签、分类、通知与回收站，遵循 [MIT License](LICENCE)。照片拍摄使用 AndroidX CameraX。没有复制 GPL NotePad 的实现。
 
-新增工作包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出。无账号、广告、分析 SDK 或云上传；没有 Internet 权限。系统自动备份关闭，请使用讲义包导出备份。
+v0.1.0 包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出，无账号或云上传。
+
+当前源码开发 v0.2.0：版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。新版本发布前必须完成 [Google OAuth 配置](docs/GOOGLE_SETUP.md) 和真实账号验证。没有广告或分析 SDK。
 
 ## 构建
 
 需要 JDK 17 和 Android SDK 36。Windows 请使用不含中文的项目路径。
 
 ```sh
-./gradlew :app:assembleDebug :data:recorder:testDebugUnitTest
-./gradlew :data:database:connectedDebugAndroidTest
-./gradlew :app:lintRelease :app:assembleRelease
+./gradlew :app:assembleDirectDebug :app:compilePlayDebugKotlin :data:recorder:testDebugUnitTest :data:cloud:testDebugUnitTest
+./gradlew :data:database:connectedDebugAndroidTest :data:cloud:connectedDebugAndroidTest
+./gradlew :app:lintDirectRelease :app:assembleDirectRelease :app:bundlePlayRelease
 ```
 
 正式 APK 使用独立包名 `com.gujiu502.lectureframe`，不会覆盖 RecorderApp。Debug 包名带 `.debug`。
 
 签名文件保存在忽略的 `.signing/release.jks`。本地 `.signing/release.properties` 使用 `ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_PASSWORD`、`ANDROID_KEY_ALIAS` 三个字段；也可通过同名环境变量提供。GitHub 自动发布另需 `ANDROID_KEYSTORE_BASE64` secret。保留原签名密钥才能兼容以后升级，密钥不进入 Git。
 
-界面、通知和小工具使用中文。CI 运行中文文案检查、编译、计时／命名测试和 lint。设备工作流运行数据库迁移和持久化测试，以及 API 34 模拟器上的相机／录音／ZIP 导出流程。带 `v` 的标签生成签名 APK 和 SHA-256 校验文件。
+界面、通知和小工具使用中文。CI 检查中文文案、Direct/Play 编译、计时／命名、备份续传、数据库迁移、安装签名和 lint。设备工作流的模拟账号用于验证已授权后的离线行为，不能代替真实 Google 登录或 Drive 验证。带 `v` 的标签生成签名 APK、SHA-256 校验文件及 `update.json`；缺少 OAuth 配置时拒绝发布新版。

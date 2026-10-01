@@ -19,6 +19,18 @@ private const val TEST_DB_NAME = "migration-test-db"
 
 @RunWith(AndroidJUnit4::class)
 class DBMigrationsTests {
+	@Test fun migrate_8_to_9_preserves_original_audio_photos_and_filename() {
+		val db = testHelper.createDatabase("cloud-migration", 8)
+		db.execSQL("INSERT INTO recording_sessions VALUES ('session', 123, 'COMPLETE', '/original.m4a', 9, 871420, 'audio/mp4', 'content://audio/9', '物理_2026-10-01')")
+		db.execSQL("INSERT INTO timeline_items VALUES ('photo', 'session', 9, 871420, 'PHOTO', '/original.jpg', '', 'READY', 123)")
+		db.close()
+		val migrated = testHelper.runMigrationsAndValidate("cloud-migration", 9, true, DBMigrations.MIGRATE_8_9)
+		migrated.query("SELECT audioPath,fileName,courseName,accountId FROM recording_sessions").use {
+			assertTrue(it.moveToFirst()); assertEquals("/original.m4a", it.getString(0)); assertEquals("物理_2026-10-01", it.getString(1)); assertEquals("未分類", it.getString(2)); assertTrue(it.isNull(3))
+		}
+		migrated.query("SELECT mediaPath,positionMs FROM timeline_items").use { assertTrue(it.moveToFirst()); assertEquals("/original.jpg", it.getString(0)); assertEquals(871420L, it.getLong(1)) }
+		migrated.close()
+	}
 
 	@Test fun migrate_7_to_8_preserves_sessions_and_timeline() {
 		val db = testHelper.createDatabase("naming-migration", 7)

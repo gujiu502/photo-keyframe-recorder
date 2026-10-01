@@ -72,7 +72,8 @@ find("3 張照片")
 tap("停止")
 find("檔名（不含副檔名）")
 assert not any(n.get("text") == "完成" and n.get("enabled") == "true" for n in nodes()), "Empty filename must not save"
-field = next(n for n in nodes() if n.get("class") == "android.widget.EditText")
+fields = [n for n in nodes() if n.get("class") == "android.widget.EditText"]
+field = next(n for n in fields if any("檔名" in child.get("text", "") for child in n.iter()))
 x1, y1, x2, y2 = map(int, re.findall(r"\d+", field.get("bounds")))
 run("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
 run("shell", "input", "text", "ZipCheck")

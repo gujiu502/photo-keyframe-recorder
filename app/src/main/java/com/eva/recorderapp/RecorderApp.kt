@@ -17,6 +17,8 @@ import com.eva.worker.RemoveTrashRecordingWorker
 import com.eva.worker.UpdateRecordingPathWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalComposeRuntimeApi::class)
 @HiltAndroidApp
@@ -29,6 +31,9 @@ class RecorderApp : Application(), Configuration.Provider {
 
 	@Inject
 	lateinit var shortcutFacade: AppShortcutFacade
+	@Inject lateinit var backup: com.eva.cloud.DriveBackup
+	@Inject lateinit var db: com.eva.database.RecorderDataBase
+	private val background = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
 
 	override val workManagerConfiguration: Configuration
 		get() = Configuration.Builder()
@@ -51,6 +56,12 @@ class RecorderApp : Application(), Configuration.Provider {
 		RemoveTrashRecordingWorker.startRepeatWorker(applicationContext)
 		// update path worker
 		UpdateRecordingPathWorker.startWorker(applicationContext)
+		background.launch {
+			db.sessionDao().completed().distinctUntilChanged().collect {
+				runCatching { backup.reconcile() }
+				updateWhenIdle(applicationContext, db)
+			}
+		}
 	}
 
 

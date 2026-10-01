@@ -51,7 +51,7 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: 
     com.eva.feature_recorder.composable.SaveRecordingDialog(
         showDialog = namingRequested && state == RecorderState.PAUSED && active != null,
         onDismiss = { vm.sessions.namingRequested.value = false },
-        onSave = { onAction(com.eva.recorder.domain.models.RecorderAction.SaveRecorderAction(it)) },
+        onSave = { name, course -> onAction(com.eva.recorder.domain.models.RecorderAction.SaveRecorderAction(name, course)) },
     )
     val busy by vm.busy.collectAsStateWithLifecycle()
     var showCamera by remember { mutableStateOf(false) }

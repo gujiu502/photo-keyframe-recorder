@@ -34,6 +34,7 @@ import com.eva.ui.utils.LocalSnackBarProvider
 fun AppNavHost(
 	modifier: Modifier = Modifier,
 	onSetController: suspend (NavHostController) -> Unit = {},
+	startInLibrary: Boolean = false,
 ) {
 	val navController = rememberNavController()
 	val currentOnSetController by rememberUpdatedState(onSetController)
@@ -51,7 +52,7 @@ fun AppNavHost(
 		) {
 			NavHost(
 				navController = navController,
-				startDestination = NavRoutes.VoiceRecorder,
+				startDestination = if (startInLibrary) NavRoutes.VoiceRecordings else NavRoutes.VoiceRecorder,
 				modifier = modifier
 			) {
 				// screens

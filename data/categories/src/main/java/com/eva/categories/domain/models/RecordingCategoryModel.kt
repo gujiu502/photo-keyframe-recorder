@@ -13,7 +13,7 @@ data class RecordingCategoryModel(
 	companion object {
 		val ALL_CATEGORY = RecordingCategoryModel(
 			id = -1,
-			name = "All Recordings",
+			name = "全部錄音",
 			createdAt = null
 		)
 	}

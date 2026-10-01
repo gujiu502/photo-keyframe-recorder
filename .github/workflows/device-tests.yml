@@ -27,10 +27,19 @@ jobs:
           target: google_apis
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated
           script: |
-            ./gradlew :data:database:connectedDebugAndroidTest :app:installDebug
+            ./gradlew :data:database:connectedDebugAndroidTest :data:cloud:connectedDebugAndroidTest :app:assembleDirectDebug :app:assembleDirectDebugAndroidTest :app:installDirectDebug
+            python3 tools/update_test_fixtures.py app/build/outputs/apk/direct/debug/app-direct-debug.apk "$ANDROID_HOME" "$HOME/.android/debug.keystore" work/update-fixtures
+            adb shell mkdir -p /sdcard/Android/data/com.gujiu502.lectureframe.debug/files
+            adb push work/update-fixtures/same-key.apk work/update-fixtures/wrong-key.apk /sdcard/Android/data/com.gujiu502.lectureframe.debug/files/
+            adb install -r app/build/outputs/apk/androidTest/direct/debug/app-direct-debug-androidTest.apk
+            adb shell am instrument -w com.gujiu502.lectureframe.debug.test/androidx.test.runner.AndroidJUnitRunner | tee work/app-instrumentation.log
+            python3 -c 'from pathlib import Path; import re; result = Path("work/app-instrumentation.log").read_text(); assert re.search(r"OK \([1-9][0-9]* tests?\)", result) and not re.search(r"FAILURES|INSTRUMENTATION_FAILED|Process crashed", result), result'
             python3 tools/ui_smoke.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: device-test-results
-          path: '**/build/outputs/androidTest-results/**'
+          path: |
+            **/build/outputs/androidTest-results/**
+            work/app-instrumentation.log
+            work/ui-smoke-*/lecture.zip

@@ -10,6 +10,14 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 object DBMigrations {
+	val MIGRATE_8_9 = object : Migration(8, 9) {
+		override fun migrate(db: SupportSQLiteDatabase) {
+			db.execSQL("ALTER TABLE recording_sessions ADD COLUMN courseName TEXT NOT NULL DEFAULT '未分類'")
+			db.execSQL("ALTER TABLE recording_sessions ADD COLUMN accountId TEXT")
+			db.execSQL("CREATE TABLE IF NOT EXISTS cloud_backups (sessionId TEXT NOT NULL PRIMARY KEY, accountId TEXT NOT NULL, email TEXT NOT NULL, state TEXT NOT NULL, folderId TEXT, lastAttemptAt INTEGER NOT NULL, lastSuccessAt INTEGER NOT NULL, errorCode TEXT)")
+			db.execSQL("CREATE TABLE IF NOT EXISTS cloud_files (sessionId TEXT NOT NULL, relativePath TEXT NOT NULL, localPath TEXT NOT NULL, contentHash TEXT NOT NULL, size INTEGER NOT NULL, mimeType TEXT NOT NULL, driveFileId TEXT, resumableUri TEXT, uploadedBytes INTEGER NOT NULL, state TEXT NOT NULL, PRIMARY KEY(sessionId,relativePath))")
+		}
+	}
 
 	val MIGRATE_7_8 = object : Migration(7, 8) {
 		override fun migrate(db: SupportSQLiteDatabase) {

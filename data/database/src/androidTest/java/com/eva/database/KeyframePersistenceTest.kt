@@ -10,12 +10,38 @@ import java.io.File
 import java.util.UUID
 
 class KeyframePersistenceTest {
+    @Test fun cloudQueueIdempotencyAndInstallerLockPreserveLocalData() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = RecorderDataBase.createInMemoryDatabase(context)
+        val store = SessionStore(context, db)
+        val prefs = AccountSettings(context).prefs
+        try {
+            val session = store.start(requireAccount = false)
+            assertTrue(db.sessionDao().recordingBusy())
+            db.sessionDao().state(session, "PAUSED", 100)
+            assertTrue(db.sessionDao().recordingBusy())
+            db.sessionDao().state(session, "FINALIZING", 100)
+            assertTrue(db.sessionDao().recordingBusy())
+            db.sessionDao().complete(session, 9)
+            assertFalse(db.sessionDao().recordingBusy())
+            repeat(20) { db.cloudDao().enqueue(com.eva.database.entity.CloudBackupEntity(session, "original-account", "original@example.invalid")) }
+            assertEquals(1, db.cloudDao().all().size)
+            val row = db.cloudDao().backup(session)!!
+            for (state in listOf("AUTH_REQUIRED", "QUOTA_FULL", "COMPLETE")) {
+                db.cloudDao().put(row.copy(state = state))
+                assertNotNull(db.sessionDao().session(session))
+            }
+            store.activeId.value = null
+            prefs.edit().putBoolean("install_committed", true).commit()
+            assertTrue(runCatching { store.start(requireAccount = false) }.isFailure)
+        } finally { prefs.edit().remove("install_committed").commit(); db.close() }
+    }
     @Test fun hundredPhotosRecoveryIdempotencyAndCleanup() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val db = RecorderDataBase.createInMemoryDatabase(context)
         val store = SessionStore(context, db)
         try {
-            val session = store.start()
+            val session = store.start(requireAccount = false)
             val bitmap = Bitmap.createBitmap(16, 16, Bitmap.Config.ARGB_8888)
             repeat(100) { index ->
                 val item = store.beginPhoto(index * 72_000L)

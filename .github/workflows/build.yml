@@ -18,8 +18,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: python3 tools/check_chinese_ui.py
-      - run: ./gradlew :app:assembleDebug :data:recorder:testDebugUnitTest :app:lintDebug
+      - run: ./gradlew :app:assembleDirectDebug :app:compilePlayDebugKotlin :data:recorder:testDebugUnitTest :data:cloud:testDebugUnitTest :app:lintDirectDebug
       - uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/direct/debug/*.apk

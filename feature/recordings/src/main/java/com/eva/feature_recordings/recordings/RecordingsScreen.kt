@@ -133,6 +133,7 @@ internal fun RecordingsScreen(
 				isVisible = isAnySelected,
 				onShareSelected = { onScreenEvent(RecordingScreenEvent.ShareSelectedRecordings) },
 				onItemDelete = { onScreenEvent(RecordingScreenEvent.OnSelectedItemTrashRequest) },
+				onItemDeleteCloud = { onScreenEvent(RecordingScreenEvent.OnSelectedItemTrashAndCloudRequest) },
 				onStarItem = { onScreenEvent(RecordingScreenEvent.OnToggleFavourites) },
 				onRename = {
 					// no rename option if option is not available

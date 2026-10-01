@@ -27,8 +27,10 @@ import kotlinx.coroutines.asExecutor
 		RecordingBookMarkEntity::class,
 		com.eva.database.entity.RecordingSessionEntity::class,
 		com.eva.database.entity.TimelineItemEntity::class,
+		com.eva.database.entity.CloudBackupEntity::class,
+		com.eva.database.entity.CloudFileEntity::class,
 	],
-	version = 8,
+	version = 9,
 	exportSchema = true,
 	autoMigrations = [
 		AutoMigration(from = 1, to = 2),
@@ -44,6 +46,7 @@ import kotlinx.coroutines.asExecutor
 	],
 )
 abstract class RecorderDataBase : RoomDatabase() {
+	abstract fun cloudDao(): com.eva.database.dao.CloudDao
 
 	abstract fun sessionDao(): com.eva.database.dao.SessionDao
 
@@ -72,7 +75,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 				)
 					.addTypeConverter(localtimeConvertor)
 					.addTypeConverter(localDateTimeConvertor)
-					.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8)
+					.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8, DBMigrations.MIGRATE_8_9)
 					.setQueryExecutor(Dispatchers.IO.asExecutor())
 					.build()
 					.also { db -> instance = db }
@@ -83,7 +86,7 @@ abstract class RecorderDataBase : RoomDatabase() {
 			return Room.inMemoryDatabaseBuilder(context, RecorderDataBase::class.java)
 				.addTypeConverter(localtimeConvertor)
 				.addTypeConverter(localDateTimeConvertor)
-				.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8)
+				.addMigrations(DBMigrations.MIGRATE_5_6, DBMigrations.MIGRATE_6_7, DBMigrations.MIGRATE_7_8, DBMigrations.MIGRATE_8_9)
 				.setQueryExecutor(Dispatchers.IO.asExecutor())
 				.build()
 		}

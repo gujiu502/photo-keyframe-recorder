@@ -15,6 +15,7 @@
     android:supportsRtl="true"
     android:theme="@style/Theme.App.Starting"
     tools:targetApi="33">
+    <activity android:name=".AccountActivity" android:exported="false" android:theme="@style/Theme.App.Starting" />
 
     <activity
       android:name="com.eva.feature_onboarding.OnBoardingActivity"

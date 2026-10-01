@@ -17,8 +17,11 @@ android {
 		applicationId = "com.gujiu502.lectureframe"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 1
-		versionName = "0.1.0"
+		versionCode = 2
+		versionName = "0.2.0"
+		val webClientId = providers.gradleProperty("GOOGLE_WEB_CLIENT_ID").orElse(providers.environmentVariable("GOOGLE_WEB_CLIENT_ID")).getOrElse("")
+		require(webClientId.isEmpty() || webClientId.matches(Regex("[A-Za-z0-9.-]+\\.apps\\.googleusercontent\\.com")))
+		buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$webClientId\"")
 
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables {
@@ -59,6 +62,11 @@ android {
 			resValue("string", "app_name", "照片關鍵幀錄音（測試版）")
 		}
 	}
+	flavorDimensions += "distribution"
+	productFlavors {
+		create("direct") { dimension = "distribution" }
+		create("play") { dimension = "distribution" }
+	}
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_17
 		targetCompatibility = JavaVersion.VERSION_17
@@ -90,6 +98,10 @@ dependencies {
 
 	implementation(project(":core:utils"))
 	implementation(project(":data:database"))
+	implementation(libs.androidx.room.ktx)
+	implementation(project(":data:cloud"))
+	"playImplementation"("com.google.android.play:app-update:2.1.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 	implementation(project(":core:ui"))
 	implementation(project(":data:worker"))
 	implementation(project(":data:interactions"))

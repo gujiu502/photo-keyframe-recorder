@@ -45,6 +45,7 @@ import com.eva.ui.theme.RecorderAppTheme
 @Composable
 internal fun RecordingsBottomBar(
 	onItemDelete: () -> Unit,
+	onItemDeleteCloud: () -> Unit = {},
 	isVisible: Boolean,
 	modifier: Modifier = Modifier,
 	showRename: Boolean = false,
@@ -164,7 +165,7 @@ internal fun RecordingsBottomBar(
 			},
 			floatingActionButton = {
 				TrashSelectedRecordingsButton(
-					onDelete = onItemDelete
+					onDelete = onItemDelete, onDeleteCloud = onItemDeleteCloud
 				)
 			},
 			tonalElevation = 2.dp,

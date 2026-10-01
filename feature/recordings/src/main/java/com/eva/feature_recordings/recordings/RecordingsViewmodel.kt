@@ -48,6 +48,7 @@ internal class RecordingsViewmodel @Inject constructor(
 	private val categoriesProvider: RecordingCategoryProvider,
 	private val secondaryDataProvider: RecordingsSecondaryDataProvider,
 	private val shareUtils: ShareRecordingsUtil,
+	private val backup: com.eva.cloud.DriveBackup,
 ) : AppViewModel() {
 
 	private val _sortInfo = MutableStateFlow(RecordingsSortInfo())
@@ -151,6 +152,10 @@ internal class RecordingsViewmodel @Inject constructor(
 			RecordingScreenEvent.OnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(true)
 			RecordingScreenEvent.OnUnSelectAllRecordings -> onSelectOrUnSelectAllRecordings(false)
 			RecordingScreenEvent.OnSelectedItemTrashRequest -> onTrashSelectedRecordings()
+			RecordingScreenEvent.OnSelectedItemTrashAndCloudRequest -> viewModelScope.launch {
+				try { backup.queueCloudDeletion(selectedRecordings.map { it.id }); onTrashSelectedRecordings() }
+				catch (e: Exception) { _uiEvents.emit(UIEvents.ShowSnackBar(e.message ?: "無法排程雲端刪除，本地資料仍保留")) }
+			}
 			is RecordingScreenEvent.OnSortOptionChange -> _sortInfo.update { it.copy(options = event.sort) }
 			is RecordingScreenEvent.OnSortOrderChange -> _sortInfo.update { it.copy(order = event.order) }
 			RecordingScreenEvent.ShareSelectedRecordings -> shareSelectedRecordings()

@@ -14,4 +14,6 @@ data class RecordingSessionEntity(
     val mimeType: String = "audio/mp4",
     val exportUri: String? = null,
     val fileName: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "'未分類'") val courseName: String = "未分類",
+    val accountId: String? = null,
 )

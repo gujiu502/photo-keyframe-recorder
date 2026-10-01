@@ -23,13 +23,14 @@ import com.eva.ui.theme.RecorderAppTheme
 internal fun SaveRecordingDialog(
 	showDialog: Boolean,
 	onDismiss: () -> Unit,
-	onSave: (String) -> Unit,
+	onSave: (String, String) -> Unit,
 	modifier: Modifier = Modifier,
 	properties: DialogProperties = DialogProperties(dismissOnClickOutside = false),
 ) {
 	if (!showDialog) return
 	var name by rememberSaveable { mutableStateOf("") }
-	val valid = isValidRecordingName(name)
+	var course by rememberSaveable { mutableStateOf("") }
+	val valid = isValidRecordingName(name) && (course.isBlank() || isValidRecordingName(course))
 
 	AlertDialog(
 		onDismissRequest = onDismiss,
@@ -37,7 +38,7 @@ internal fun SaveRecordingDialog(
 			TextButton(
 				onClick = {
 					onDismiss()
-					onSave(name.trim())
+					onSave(name.trim(), course.trim().ifEmpty { "未分類" })
 				},
 				enabled = valid,
 			) {
@@ -52,6 +53,9 @@ internal fun SaveRecordingDialog(
 		title = { Text(text = stringResource(id = R.string.save_recording_dialog_title)) },
 		text = {
 			Column {
+				OutlinedTextField(value = course, onValueChange = { course = it }, singleLine = true,
+					label = { Text("課程名稱（可留空）") }, isError = course.isNotBlank() && !isValidRecordingName(course),
+					supportingText = { Text(if (course.isNotBlank() && !isValidRecordingName(course)) "最多 50 字，不可包含檔名禁用符號" else "留空時備份到「未分類」課程") })
 				OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true,
 					label = { Text("檔名（不含副檔名）") }, isError = name.isNotEmpty() && !valid,
 					supportingText = { Text(if (name.isNotEmpty() && !valid) "最多 50 字，不可包含 / \\ : * ? \" < > |" else "自動附加日期時間：yyyy-MM-dd_HH-mm-ss") })
@@ -69,6 +73,6 @@ private fun SaveRecordingsDialogPreview() = RecorderAppTheme {
 	SaveRecordingDialog(
 		showDialog = true,
 		onDismiss = {},
-		onSave = {}
+		onSave = { _, _ -> }
 	)
 }

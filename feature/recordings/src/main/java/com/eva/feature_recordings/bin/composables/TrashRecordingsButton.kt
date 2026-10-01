@@ -27,6 +27,7 @@ import com.eva.ui.R
 @Composable
 internal fun TrashSelectedRecordingsButton(
 	onDelete: () -> Unit,
+	onDeleteCloud: () -> Unit = {},
 	modifier: Modifier = Modifier,
 	shape: Shape = MaterialTheme.shapes.medium,
 	containerColor: Color = FloatingActionButtonDefaults.containerColor,
@@ -35,6 +36,11 @@ internal fun TrashSelectedRecordingsButton(
 ) {
 
 	var showDialog by remember { mutableStateOf(false) }
+	var confirmCloud by remember { mutableStateOf(false) }
+	if (confirmCloud) AlertDialog(onDismissRequest = { confirmCloud = false },
+		title = { Text("確認刪除 Google Drive 備份？") }, text = { Text("所選課程的雲端錄音、照片及時間軸都會刪除，無法復原。沒有網路時會排隊執行。") },
+		confirmButton = { TextButton(onClick = { confirmCloud = false; onDeleteCloud() }) { Text("確認刪除本地與雲端") } },
+		dismissButton = { TextButton(onClick = { confirmCloud = false }) { Text("取消") } })
 
 	if (showDialog)
 		AlertDialog(
@@ -46,7 +52,7 @@ internal fun TrashSelectedRecordingsButton(
 						showDialog = false
 					},
 				) {
-					Text(text = stringResource(id = R.string.recording_action_delete))
+					Text("只刪本地")
 				}
 			},
 			dismissButton = {
@@ -55,7 +61,10 @@ internal fun TrashSelectedRecordingsButton(
 				}
 			},
 			title = { Text(text = stringResource(id = R.string.recording_trash_dialog_title)) },
-			text = { Text(text = stringResource(id = R.string.recording_trash_dialog_text)) },
+			text = { androidx.compose.foundation.layout.Column {
+				Text(text = stringResource(id = R.string.recording_trash_dialog_text))
+				TextButton(onClick = { showDialog = false; confirmCloud = true }) { Text("本地與 Google Drive 都刪除") }
+			} },
 			icon = {
 				Icon(
 					painter = painterResource(id = R.drawable.ic_eraser),

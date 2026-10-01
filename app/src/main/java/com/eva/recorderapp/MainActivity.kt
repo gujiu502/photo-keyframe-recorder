@@ -20,6 +20,8 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 	@javax.inject.Inject lateinit var sessions: com.eva.database.SessionStore
+	@javax.inject.Inject lateinit var backup: com.eva.cloud.DriveBackup
+	@javax.inject.Inject lateinit var db: com.eva.database.RecorderDataBase
 
 	private var navController: NavHostController? = null
 
@@ -44,11 +46,12 @@ class MainActivity : ComponentActivity() {
 		setContent {
 			RecorderAppTheme {
 				Surface(color = MaterialTheme.colorScheme.background) {
-					AppNavHost(
+					MainContent(this, sessions, backup, db) { readOnly -> AppNavHost(
+						startInLibrary = readOnly,
 						onSetController = { controller ->
-							if (navController == null) navController = controller
+							navController = controller
 						},
-					)
+					) }
 				}
 			}
 		}

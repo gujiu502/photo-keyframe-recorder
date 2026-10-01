@@ -229,6 +229,7 @@ internal class VoiceRecorderImpl(
 	}
 
 	override suspend fun startRecording() {
+		check(com.eva.database.AccountSettings(context).recordingAllowed) { "請先完成 Google 帳號與 Drive 設定，或完成必要更新" }
 		_lock.tryWithLock(this) {
 			// current uri is already set cannot set it again
 			if (_recordingFile != null) {

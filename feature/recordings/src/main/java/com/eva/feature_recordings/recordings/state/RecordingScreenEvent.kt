@@ -14,6 +14,7 @@ internal sealed interface RecordingScreenEvent {
 	data object OnUnSelectAllRecordings : RecordingScreenEvent
 
 	data object OnSelectedItemTrashRequest : RecordingScreenEvent
+	data object OnSelectedItemTrashAndCloudRequest : RecordingScreenEvent
 
 	data object OnToggleFavourites : RecordingScreenEvent
 
