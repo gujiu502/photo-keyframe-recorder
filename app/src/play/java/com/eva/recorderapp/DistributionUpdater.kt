@@ -10,6 +10,7 @@ import com.eva.database.RecorderDataBase
 import com.google.android.play.core.appupdate.*
 import com.google.android.play.core.install.model.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import android.content.Context
 import androidx.room.withTransaction
@@ -47,7 +48,8 @@ fun DistributionUpdater(activity: ComponentActivity, db: RecorderDataBase) {
                 }
                 delay(30_000)
             }
-        } catch (e: Exception) { AccountSettings(activity).prefs.edit().putBoolean("install_committed", false).apply(); message = "Google Play 更新暫時無法使用，本地資料仍保留" }
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { AccountSettings(activity).prefs.edit().putBoolean("install_committed", false).apply(); message = "Google Play 更新暫時無法使用，本地資料仍保留" }
     }
     if (message.isNotBlank()) Text(message)
 }
