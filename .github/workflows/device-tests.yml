@@ -44,4 +44,4 @@ jobs:
           path: |
             **/build/outputs/androidTest-results/**
             work/app-instrumentation.log
-            work/ui-smoke-*/lecture.zip
+            work/ui-smoke-*/**

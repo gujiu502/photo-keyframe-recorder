@@ -12,6 +12,8 @@ parser.add_argument("--package", default="com.gujiu502.lectureframe.debug")
 parser.add_argument("--serial")
 args = parser.parse_args()
 adb = [os.environ.get("ADB", "adb")] + (["-s", args.serial] if args.serial else [])
+output = Path("work/ui-smoke-" + args.package)
+output.mkdir(parents=True, exist_ok=True)
 
 
 def run(*command, check=True):
@@ -40,7 +42,14 @@ def find(label, timeout=35):
             if label in (node.get("text"), node.get("content-desc")) and node.get("enabled") == "true":
                 return node
         time.sleep(0.5)
-    raise AssertionError(f"Missing enabled control: {label}")
+    current = nodes()
+    (output / "failure.xml").write_text(run("shell", "cat", "/sdcard/keyframe-smoke.xml"), encoding="utf-8")
+    with (output / "logcat.txt").open("wb") as log:
+        subprocess.run(adb + ["logcat", "-d"], stdout=log, check=False)
+    with (output / "failure.png").open("wb") as screenshot:
+        subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=False)
+    visible = [(n.get("text"), n.get("content-desc"), n.get("enabled")) for n in current if n.get("text") or n.get("content-desc")]
+    raise AssertionError(f"Missing enabled control: {label}; visible: {visible}")
 
 
 def tap(label):
@@ -98,8 +107,6 @@ zip_name = next(node.get("text") for node in picker if node.get("class") == "and
 save_label = next(node.get("text") for node in picker if node.get("class") == "android.widget.Button" and node.get("text") in ("儲存", "保存", "Save", "SAVE"))
 tap(save_label)
 find("導出")
-output = Path("work/ui-smoke-" + args.package)
-output.mkdir(parents=True, exist_ok=True)
 zip_path = output / "lecture.zip"
 audio_copy = output / "original.m4a"
 deadline = time.monotonic() + 30
