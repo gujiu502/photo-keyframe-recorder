@@ -26,6 +26,8 @@ Android 11：七個資料庫／migration 測試，以及 Drive 協議測試通�
 
 GitHub Android 14 的資料庫、模擬續傳、簽名及離線授權檢查通過；ZIP UI 流程也已驗證。後續重新錄音的測試曾被系統 heads-up 通知遮住拍照按鈕，已用失敗截圖與 camera 日誌確認沒有打開相機。CI 的臨時裝置關閉橫幅弹窗，仍保留前景錄音通知；正式 App 及使用者模擬器不改這項設定。
 
+最終 [GitHub 建置檢查](https://github.com/gujiu502/photo-keyframe-recorder/actions/runs/36872509191) 與 [完整 Android 14 設備流程](https://github.com/gujiu502/photo-keyframe-recorder/actions/runs/36872508613) 均通過，包含相機、暫停拍攝、背景返回、檔名日期時間、ZIP 位元組驗證及異常退出恢復。Play 最終 AAB 也已本機建置通過；離開更新畫面時不會清除進行中的安裝鎖。
+
 已授權離線情境的完整 UI 測試通過：實際 CameraX 拍攝三張照片（兩張在暫停中）、背景返回、檔名自動日期時間、Android 文件選擇器導出 ZIP及強制停止恢復。ZIP 音訊 383594 bytes 與原件一致，三張 JPEG、時間軸、Markdown 及 CRC 均通過。測試帳號僅由 instrumentation 設定，正式 App 沒有跳過 Google 登入的入口。
 
 ## 尚待外部設定／驗證
