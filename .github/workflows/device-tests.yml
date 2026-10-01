@@ -28,7 +28,9 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated
           script: |
             ./gradlew :data:database:connectedDebugAndroidTest :data:cloud:connectedDebugAndroidTest :app:assembleDirectDebug :app:assembleDirectDebugAndroidTest :app:installDirectDebug
-            python3 tools/update_test_fixtures.py app/build/outputs/apk/direct/debug/app-direct-debug.apk "$ANDROID_HOME" "$HOME/.android/debug.keystore" work/update-fixtures
+            mkdir -p work
+            ./gradlew :app:signingReport --console=plain > work/signing-report.txt
+            python3 tools/update_test_fixtures.py app/build/outputs/apk/direct/debug/app-direct-debug.apk "$ANDROID_HOME" "$(python3 -c 'import re; from pathlib import Path; print(re.search(r"(?m)^Store: (.+debug\.keystore)$", Path("work/signing-report.txt").read_text())[1])')" work/update-fixtures
             adb shell mkdir -p /sdcard/Android/data/com.gujiu502.lectureframe.debug/files
             adb push work/update-fixtures/same-key.apk work/update-fixtures/wrong-key.apk /sdcard/Android/data/com.gujiu502.lectureframe.debug/files/
             adb install -r app/build/outputs/apk/androidTest/direct/debug/app-direct-debug-androidTest.apk
