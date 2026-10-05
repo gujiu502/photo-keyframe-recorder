@@ -1,5 +1,12 @@
 package com.eva.recorderapp.navigation
 
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.eva.ui.navigation.LocalNavigateHome
+import com.eva.ui.navigation.PlayerSubGraph
+import com.eva.ui.navigation.navigateHome
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.SnackbarHostState
@@ -37,6 +44,8 @@ fun AppNavHost(
 	startInLibrary: Boolean = false,
 ) {
 	val navController = rememberNavController()
+	val entry by navController.currentBackStackEntryAsState()
+	val activity = LocalActivity.current
 	val currentOnSetController by rememberUpdatedState(onSetController)
 
 	LaunchedEffect(navController) {
@@ -47,6 +56,7 @@ fun AppNavHost(
 
 	SharedTransitionLayout {
 		CompositionLocalProvider(
+			LocalNavigateHome provides { navController.navigateHome() },
 			LocalSnackBarProvider provides snackBarProvider,
 			LocalSharedTransitionScopeProvider provides this,
 		) {
@@ -65,12 +75,18 @@ fun AppNavHost(
 				categoryPickerRoute(controller = navController)
 				createOrEditCategoryRoute(controller = navController)
 				//dialogs
-				appInfoDialog()
+				appInfoDialog(navController)
 				renameRecordingDialog(controller = navController)
 				// subgraph
 				playerNavGraph(controller = navController)
 			}
 		}
+	}
+	// Register after NavHost so nested navigation cannot send the task to the launcher.
+	// The editor handles Back itself to protect unsaved edits.
+	BackHandler(enabled = entry?.destination?.hasRoute<PlayerSubGraph.AudioEditorRoute>() != true) {
+		if (entry?.destination?.hasRoute<NavRoutes.VoiceRecorder>() == true) activity?.moveTaskToBack(true)
+		else navController.navigateHome()
 	}
 }
 

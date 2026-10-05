@@ -1,5 +1,6 @@
 package com.eva.feature_categories.routes
 
+import com.eva.ui.navigation.navigateHome
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -27,7 +28,7 @@ fun NavGraphBuilder.categoryPickerRoute(controller: NavController) =
 
 		UiEventsHandler(
 			eventsFlow = viewModel::uiEvent,
-			onNavigateBack = dropUnlessResumed(block = controller::popBackStack)
+			onNavigateBack = dropUnlessResumed(block = controller::navigateHome)
 		)
 
 		val isLoaded by viewModel.isLoaded.collectAsStateWithLifecycle()
@@ -46,7 +47,7 @@ fun NavGraphBuilder.categoryPickerRoute(controller: NavController) =
 				navigation = {
 					if (controller.previousBackStackEntry?.destination?.route != null) {
 						IconButton(
-							onClick = dropUnlessResumed(block = controller::popBackStack)
+							onClick = dropUnlessResumed(block = controller::navigateHome)
 						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Default.ArrowBack,

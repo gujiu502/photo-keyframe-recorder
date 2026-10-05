@@ -1,6 +1,7 @@
 package com.eva.feature_player.keyframe
 
 import android.net.Uri
+import com.eva.ui.navigation.LocalNavigateHome
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +32,7 @@ import java.io.File
 internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentPosition: () -> Long,
     onSeek: (Long) -> Unit, modifier: Modifier = Modifier, vm: KeyframePlayerViewModel = hiltViewModel()) {
     val context = LocalContext.current
+    val goHome = LocalNavigateHome.current
     val flow = remember(id) { vm.sessions.dao.observeRecording(id) }
     val items by flow.collectAsStateWithLifecycle(initialValue = emptyList())
     var selected by remember { mutableStateOf<TimelineItemEntity?>(null) }
@@ -72,7 +74,7 @@ internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentP
     selected?.let { item ->
         var scale by remember(item.id) { mutableFloatStateOf(1f) }
         var offset by remember(item.id) { mutableStateOf(Offset.Zero) }
-        Dialog(onDismissRequest = { selected = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Dialog(onDismissRequest = { selected = null; goHome() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface(Modifier.fillMaxSize()) {
                 Column {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

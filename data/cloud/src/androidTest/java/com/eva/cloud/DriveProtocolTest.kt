@@ -3,6 +3,8 @@ package com.eva.cloud
 import androidx.test.platform.app.InstrumentationRegistry
 import com.eva.database.*
 import com.eva.database.entity.CloudFileEntity
+import com.eva.database.entity.CloudBackupEntity
+import com.eva.database.entity.RecordingSessionEntity
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
@@ -51,6 +53,67 @@ class DriveProtocolTest {
             val chunks = remote.chunks
             backup.uploadFile(client, root, completed)
             assertEquals(chunks, remote.chunks) // verified complete data is never uploaded twice
+            db.sessionDao().insertSession(RecordingSessionEntity("session", 1, status = "COMPLETE"))
+            val completeBackup = CloudBackupEntity("session", "account", "test@example.invalid", state = "COMPLETE", folderId = root)
+            db.cloudDao().put(completeBackup)
+            val repairs = mutableListOf<String>()
+            backup.checkCompleted(client, "account", repairs::add)
+            assertTrue(repairs.isEmpty())
+            remote.files.remove(completed.driveFileId)
+            backup.checkCompleted(client, "account", repairs::add)
+            assertEquals(listOf("session"), repairs)
+            assertEquals("QUEUED", db.cloudDao().backup("session")!!.state)
+            backup.checkCompleted(client, "account", repairs::add)
+            assertEquals(1, repairs.size) // no duplicate repair on another launch
+            // A removed file cannot reuse an upload URL bound to its old file ID.
+            backup.uploadFile(client, root, completed.copy(resumableUri = "https://www.googleapis.com/resumable/stale"))
+            val repaired = db.cloudDao().files("session").single()
+            assertNotEquals(completed.driveFileId, repaired.driveFileId)
+            assertEquals(originalHash, sha256 { remote.files.getValue(repaired.driveFileId!!).bytes.inputStream() })
+            db.cloudDao().put(completeBackup)
+            remote.files.getValue(root).metadata.put("trashed", true)
+            repairs.clear()
+            backup.checkCompleted(client, "account", repairs::add)
+            assertEquals(listOf("session"), repairs)
+            val replacementRoot = client.ensure("課程錄音", null, properties, true)
+            assertNotEquals(root, replacementRoot)
+            backup.uploadFile(client, replacementRoot, repaired)
+            val restored = db.cloudDao().files("session").single()
+            assertNotEquals(repaired.driveFileId, restored.driveFileId)
+            assertEquals(originalHash, sha256 { remote.files.getValue(restored.driveFileId!!).bytes.inputStream() })
+            val restoredBackup = completeBackup.copy(folderId = replacementRoot)
+            db.cloudDao().put(restoredBackup)
+            repairs.clear()
+            backup.checkCompleted(client, "account", repairs::add)
+            assertTrue(repairs.isEmpty())
+            for (errorCode in listOf(401, 403, 500)) {
+                remote.readError = errorCode
+                assertTrue(runCatching { backup.checkCompleted(client, "account", repairs::add) }.isFailure)
+                assertEquals("COMPLETE", db.cloudDao().backup("session")!!.state)
+                assertTrue(repairs.isEmpty()) // failures are not proof that files were deleted
+            }
+            remote.readError = null
+            remote.files.getValue(restored.driveFileId!!).metadata.put("trashed", true)
+            remote.onMetadata = { db.cloudDao().put(restoredBackup.copy(state = "DELETE_QUEUED")) }
+            backup.checkCompleted(client, "account", repairs::add)
+            assertEquals("DELETE_QUEUED", db.cloudDao().backup("session")!!.state)
+            assertTrue(repairs.isEmpty()) // preserve concurrent explicit deletion
+            db.cloudDao().put(restoredBackup.copy(accountId = "another-account"))
+            backup.checkCompleted(client, "account", repairs::add)
+            assertTrue(repairs.isEmpty())
+            val account = AccountSettings(context)
+            account.prefs.edit().putInt("agreement_version", AccountSettings.AGREEMENT_VERSION)
+                .putString("account_id", "account").putString("email", "test@example.invalid")
+                .putBoolean("drive_authorized", true).commit()
+            try {
+                db.cloudDao().put(restoredBackup.copy(state = "DELETED"))
+                backup.reconcile()
+                backup.checkCompleted(client, "account", repairs::add)
+                backup.upload("session") // even a previously queued upload respects the tombstone
+                assertEquals("DELETED", db.cloudDao().backup("session")!!.state)
+                assertTrue(repairs.isEmpty()) // a later startup must not resurrect explicit deletion
+            } finally { account.prefs.edit().clear().commit() }
+            assertEquals(originalHash, sha256 { source.inputStream() })
             remote.quotaFull = true
             val error = runCatching { client.ensure("new", null, mapOf("schema" to "quota-test"), true) }.exceptionOrNull()
             assertEquals("QUOTA_FULL", (error as DriveHttpError).state)
@@ -69,6 +132,14 @@ private class FakeDrive {
     var quotaFull = false
     var probedResume = false
     var chunks = 0
+    var readError: Int? = null
+    var onMetadata: (suspend () -> Unit)? = null
+    private fun trashed(id: String): Boolean {
+        val file = files[id] ?: return true
+        if (file.metadata.optBoolean("trashed")) return true
+        val parents = file.metadata.optJSONArray("parents") ?: return false
+        return (0 until parents.length()).any { trashed(parents.getString(it)) }
+    }
     private var counter = 0
     fun connection(url: URL) = object : HttpURLConnection(url) {
         private val output = ByteArrayOutputStream()
@@ -88,7 +159,7 @@ private class FakeDrive {
         if (url.query?.startsWith("q=") == true) {
             val query = URLDecoder.decode(url.query.substringAfter("q=").substringBefore('&'), "UTF-8")
             val props = Regex("key='([^']+)' and value='([^']+)'").findAll(query).map { it.groupValues[1] to it.groupValues[2] }.toList()
-            val matching = files.filter { (_, file) -> props.all { file.metadata.optJSONObject("appProperties")?.optString(it.first) == it.second } }
+            val matching = files.filter { (id, file) -> !trashed(id) && props.all { file.metadata.optJSONObject("appProperties")?.optString(it.first) == it.second } }
             return Reply(200, JSONObject().put("files", JSONArray(matching.keys.map { JSONObject().put("id", it) })).toString())
         }
         if (override == "PATCH" && url.path.contains("/upload/drive/")) {
@@ -113,9 +184,11 @@ private class FakeDrive {
             chunks++; file.bytes += bytes
             return if (file.bytes.size.toLong() == parts[3].toLong()) Reply(200, "{}") else Reply(308, range = "bytes=0-${file.bytes.size - 1}")
         }
+        readError?.let { return Reply(it, "metadata failure") }
+        onMetadata?.let { callback -> onMetadata = null; runBlocking { callback() } }
         val id = url.path.substringAfterLast('/')
         val file = files[id] ?: return Reply(404, "notFound")
         return Reply(200, JSONObject(file.metadata.toString()).put("id", id).put("size", file.bytes.size)
-            .put("sha256Checksum", sha256 { file.bytes.inputStream() }).put("trashed", false).toString())
+            .put("sha256Checksum", sha256 { file.bytes.inputStream() }).put("trashed", trashed(id)).toString())
     }
 }

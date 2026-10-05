@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.work.*
+import androidx.room.withTransaction
 import com.eva.database.*
 import com.eva.database.entity.*
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -46,9 +47,61 @@ class DriveBackup @Inject constructor(@ApplicationContext private val context: C
     suspend fun onAuthorizationGranted() {
         for (row in dao.all().filter { it.accountId == settings.accountId && it.state in setOf("AUTH_REQUIRED", "DELETE_AUTH_REQUIRED") }) retry(row.sessionId)
         reconcile()
+        checkOnLaunch()
     }
-    fun enqueue(id: String) {
-        WorkManager.getInstance(context).enqueueUniqueWork("drive-upload-$id", ExistingWorkPolicy.KEEP,
+    fun checkOnLaunch() {
+        if (!settings.configured) return
+        WorkManager.getInstance(context).enqueueUniqueWork("drive-backup-check", ExistingWorkPolicy.KEEP,
+            OneTimeWorkRequestBuilder<DriveCheckWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS).build())
+    }
+    suspend fun checkCompleted() = withContext(Dispatchers.IO) {
+        if (!settings.configured) return@withContext
+        val accountId = requireNotNull(settings.accountId)
+        if (dao.all().none { it.accountId == accountId && it.state == "COMPLETE" }) return@withContext
+        val token = GoogleAccount(context).token(requireNotNull(settings.email))
+        try { checkCompleted(DriveClient(token), accountId) }
+        catch (e: DriveHttpError) {
+            if (e.code == 401) runCatching { GoogleAccount(context).clearToken(token) }
+            throw e
+        }
+    }
+    internal suspend fun checkCompleted(client: DriveClient, accountId: String,
+        queueRepair: (String) -> Unit = { enqueue(it, ExistingWorkPolicy.APPEND_OR_REPLACE) }) = remoteLock.withLock {
+        for (row in dao.all().filter { it.accountId == accountId && it.state == "COMPLETE" }) {
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            // Check metadata only. A network/authentication failure must never imply deletion.
+            fun exists(id: String?): Boolean {
+                if (id == null) return false
+                return try { !client.metadata(id).optBoolean("trashed") }
+                catch (e: DriveHttpError) { if (e.code == 404) false else throw e }
+            }
+            val files = dao.files(row.sessionId)
+            val intact = exists(row.folderId) && files.isNotEmpty() && files.all { file ->
+                val id = file.driveFileId
+                if (id == null) false else try {
+                    val remote = client.metadata(id)
+                    !remote.optBoolean("trashed") && remote.optLong("size", -1) == file.size &&
+                        remote.optString("sha256Checksum") == file.contentHash
+                } catch (e: DriveHttpError) { if (e.code == 404) false else throw e }
+            }
+            if (intact) continue
+            val queued = db.withTransaction {
+                val current = dao.backup(row.sessionId)
+                val session = db.sessionDao().session(row.sessionId)
+                // Respect a deletion requested while the remote check was running.
+                if (current?.state != "COMPLETE" || current.accountId != accountId || session?.status != "COMPLETE") false
+                else {
+                    dao.put(current.copy(state = "QUEUED", errorCode = "雲端備份已遺失，正在重新備份"))
+                    true
+                }
+            }
+            if (queued) queueRepair(row.sessionId)
+        }
+    }
+    fun enqueue(id: String, policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP) {
+        WorkManager.getInstance(context).enqueueUniqueWork("drive-upload-$id", policy,
             OneTimeWorkRequestBuilder<DriveUploadWorker>().setInputData(workDataOf("session_id" to id))
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS).build())
@@ -63,6 +116,7 @@ class DriveBackup @Inject constructor(@ApplicationContext private val context: C
     private fun length(path: String): Long = if (path.startsWith("content:")) context.contentResolver.openFileDescriptor(Uri.parse(path), "r")!!.use { it.statSize } else File(path).length()
     suspend fun upload(id: String): Unit = withContext(Dispatchers.IO) { remoteLock.withLock {
         var row = dao.backup(id) ?: return@withContext
+        if (row.state == "DELETED" || row.state.startsWith("DELETE_")) return@withContext
         check(settings.agreementAccepted && row.accountId == settings.accountId) { "請登入這堂課綁定的原 Google 帳號" }
         val session = db.sessionDao().session(id) ?: error("本地錄音已刪除")
         check(session.status == "COMPLETE")
@@ -145,7 +199,10 @@ class DriveBackup @Inject constructor(@ApplicationContext private val context: C
         val client = DriveClient(GoogleAccount(context).token(row.email))
         val folder = row.folderId ?: client.find(mapOf("ownerApp" to "PhotoKeyframeRecorder", "sessionId" to id, "schema" to "lecture-session-v1"), true)
         if (folder != null) try { client.delete(folder) } catch (e: DriveHttpError) { if (e.code != 404) throw e }
-        dao.removeFiles(id); dao.removeBackup(id)
+        db.withTransaction {
+            dao.removeFiles(id)
+            dao.put(row.copy(state = "DELETED", folderId = null, errorCode = null))
+        }
     } }
     internal suspend fun uploadFile(client: DriveClient, parent: String, original: CloudFileEntity) {
         var row = original
@@ -153,8 +210,9 @@ class DriveBackup @Inject constructor(@ApplicationContext private val context: C
         var fileId = row.driveFileId
         if (fileId != null) try { if (client.metadata(fileId).optBoolean("trashed")) fileId = null } catch (e: DriveHttpError) { if (e.code == 404) fileId = null else throw e }
         if (fileId == null) fileId = client.ensure(row.relativePath.substringAfterLast('/'), parent, properties, false)
+        row = if (fileId == row.driveFileId) row else row.copy(resumableUri = null, uploadedBytes = 0)
         row = row.copy(driveFileId = fileId); dao.putFile(row)
-        fun verified(): Boolean { val remote = client.metadata(requireNotNull(fileId)); return remote.optLong("size", -1) == row.size && remote.optString("sha256Checksum") == row.contentHash }
+        fun verified(): Boolean { val remote = client.metadata(requireNotNull(fileId)); return !remote.optBoolean("trashed") && remote.optLong("size", -1) == row.size && remote.optString("sha256Checksum") == row.contentHash }
         if (verified()) { dao.putFile(row.copy(state = "COMPLETE", uploadedBytes = row.size, resumableUri = null)); return }
         row = row.copy(state = "UPLOADING"); dao.putFile(row)
         var url = row.resumableUri

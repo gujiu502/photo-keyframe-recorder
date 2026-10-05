@@ -1,6 +1,10 @@
 package com.eva.recorderapp.navigation.routes
 
 import android.content.ActivityNotFoundException
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
+import com.eva.ui.navigation.navigateHome
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -49,7 +53,10 @@ import com.eva.ui.theme.DownloadableFonts
 import com.eva.ui.theme.RecorderAppTheme
 import com.eva.utils.ApplicationInfo
 
-fun NavGraphBuilder.appInfoDialog() = dialog<NavDialogs.ApplicationInfo> {
+fun NavGraphBuilder.appInfoDialog(controller: NavController) = dialog<NavDialogs.ApplicationInfo>(
+	dialogProperties = DialogProperties(dismissOnBackPress = false)
+) {
+	BackHandler { controller.navigateHome() }
 	AppDialogInfoContent()
 }
 

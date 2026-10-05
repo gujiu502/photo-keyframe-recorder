@@ -1,5 +1,6 @@
 package com.eva.feature_editor
 
+import com.eva.ui.navigation.navigateHome
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -107,14 +108,10 @@ fun NavGraphBuilder.audioEditorRoute(controller: NavController) =
 				isMediaEdited = isMediaEdited,
 				undoRedoState = undoRedoState,
 				transformationState = transformationState,
-				onDismissScreen = {
+				onDismissScreen = { controller.navigateHome() },
+				navigation = { goBack ->
 					if (controller.previousBackStackEntry != null) {
-						controller.popBackStack()
-					}
-				},
-				navigation = {
-					if (controller.previousBackStackEntry != null) {
-						IconButton(onClick = dropUnlessResumed(block = controller::popBackStack)) {
+						IconButton(onClick = dropUnlessResumed(block = goBack)) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Default.ArrowBack,
 								contentDescription = stringResource(R.string.back_arrow)

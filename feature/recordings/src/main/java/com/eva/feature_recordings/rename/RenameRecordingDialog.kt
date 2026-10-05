@@ -1,5 +1,7 @@
 package com.eva.feature_recordings.rename
 
+import com.eva.ui.navigation.navigateHome
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -30,12 +32,14 @@ fun NavGraphBuilder.renameRecordingDialog(controller: NavController) =
 
 		UiEventsHandler(
 			eventsFlow = viewModel::uiEvent,
-			onNavigateBack = dropUnlessResumed(block = controller::popBackStack)
+			onNavigateBack = dropUnlessResumed(block = controller::navigateHome)
 		)
+
+		BackHandler { controller.navigateHome() }
 
 		RenameRecordingsDialogContent(
 			state = renameState,
 			onEvent = viewModel::onEvent,
-			onDismissRequest = dropUnlessResumed(block = controller::popBackStack),
+			onDismissRequest = dropUnlessResumed(block = controller::navigateHome),
 		)
 	}

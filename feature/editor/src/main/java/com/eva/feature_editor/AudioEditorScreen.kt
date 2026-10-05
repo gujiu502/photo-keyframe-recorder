@@ -79,7 +79,7 @@ internal fun AudioEditorScreen(
 	isVisualsReady: Boolean = false,
 	undoRedoState: UndoRedoState = UndoRedoState(),
 	transformationState: TransformationState = TransformationState(),
-	navigation: @Composable () -> Unit = {},
+	navigation: @Composable (() -> Unit) -> Unit = {},
 	onDismissScreen: () -> Unit = {},
 ) {
 	val snackBarHostProvider = LocalSnackBarProvider.current
@@ -107,7 +107,8 @@ internal fun AudioEditorScreen(
 		showSheet = showSheet
 	)
 
-	BackHandler(enabled = isBackHandlerEnabled, onBack = { showDialog = true })
+	val goBack: () -> Unit = { if (isBackHandlerEnabled) showDialog = true else onDismissScreen() }
+	BackHandler(onBack = goBack)
 
 	EditorBackHandlerDialog(
 		showDialog = showDialog,
@@ -128,7 +129,7 @@ internal fun AudioEditorScreen(
 				state = undoRedoState,
 				onRedoAction = { onEvent(EditorScreenEvent.OnRedoEdit) },
 				onUndoAction = { onEvent(EditorScreenEvent.OnUndoEdit) },
-				navigation = navigation,
+				navigation = { navigation(goBack) },
 				modifier = Modifier.sharedTransitionSkipChildSize()
 			)
 		},

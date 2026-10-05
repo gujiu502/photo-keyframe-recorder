@@ -43,6 +43,7 @@ fun CloudStatus(activity: ComponentActivity, db: RecorderDataBase, backup: Drive
                 Text(sessions.firstOrNull { it.sessionId == row.sessionId }?.fileName ?: row.sessionId, style = MaterialTheme.typography.titleMedium)
                 Text(when (row.state) {
                     "COMPLETE" -> "☁ 已備份"
+                    "DELETED" -> "雲端備份已刪除，不會自動補回"
                     "UPLOADING", "PARTIAL" -> "↑ 上傳中 ${if (total > 0) done * 100 / total else 0}%"
                     "QUEUED", "FAILED_RETRYABLE" -> "⏳ 等待網路／稍後重試"
                     "AUTH_REQUIRED", "DELETE_AUTH_REQUIRED" -> "Google Drive 需要重新授權"

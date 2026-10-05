@@ -27,7 +27,7 @@ manifest = {
     "mandatory": args.min_supported > 1,
     "apkUrl": f"https://github.com/gujiu502/photo-keyframe-recorder/releases/download/{args.tag}/{args.apk.name}",
     "sha256": checksum,
-    "releaseNotes": "Google 帳號、Drive 自動備份與經驗證的應用程式更新。",
+    "releaseNotes": "啟動時復查 Drive 備份並補回遺失檔案；返回鍵先回錄音主頁，再按一次才退到桌面。",
     "publishedAt": datetime.now(timezone.utc).isoformat(),
 }
 (args.apk.parent / "update.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

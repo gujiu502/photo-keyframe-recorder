@@ -1,5 +1,6 @@
 package com.eva.feature_recordings.recordings
 
+import com.eva.ui.navigation.navigateHome
 import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -95,7 +96,7 @@ fun NavGraphBuilder.recordingsRoute(controller: NavController) =
 				navigation = {
 					if (controller.previousBackStackEntry?.destination?.route != null) {
 						IconButton(
-							onClick = dropUnlessResumed(block = controller::popBackStack)
+							onClick = dropUnlessResumed(block = controller::navigateHome)
 						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Default.ArrowBack,

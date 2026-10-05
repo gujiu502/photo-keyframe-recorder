@@ -1,5 +1,6 @@
 package com.eva.feature_player
 
+import com.eva.ui.navigation.navigateHome
 import android.content.Intent
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.material.icons.Icons
@@ -90,7 +91,7 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 					bookmarkViewmodel.uiEvent
 				)
 			},
-			onNavigateBack = controller::popBackStack
+			onNavigateBack = controller::navigateHome
 		)
 
 		val lifeCycleState by backStackEntry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
@@ -125,7 +126,7 @@ fun NavGraphBuilder.audioPlayerRoute(controller: NavHostController) =
 				navigation = {
 					if (controller.previousBackStackEntry?.destination?.route != null) {
 						IconButton(
-							onClick = dropUnlessResumed(block = controller::popBackStack),
+							onClick = dropUnlessResumed(block = controller::navigateHome),
 						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Default.ArrowBack,

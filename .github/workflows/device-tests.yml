@@ -38,6 +38,7 @@ jobs:
             python3 -c 'from pathlib import Path; import re; result = Path("work/app-instrumentation.log").read_text(); assert re.search(r"OK \([1-9][0-9]* tests?\)", result) and not re.search(r"FAILURES|INSTRUMENTATION_FAILED|Process crashed", result), result'
             adb shell settings put global heads_up_notifications_enabled 0
             python3 tools/ui_smoke.py
+            python3 tools/back_navigation_smoke.py --package com.gujiu502.lectureframe.debug
       - uses: actions/upload-artifact@v4
         if: always()
         with:

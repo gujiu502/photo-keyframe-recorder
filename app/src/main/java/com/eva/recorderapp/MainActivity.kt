@@ -1,6 +1,9 @@
 package com.eva.recorderapp
 
 import android.content.Intent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
 import android.os.Build
 import android.os.Bundle
 import android.view.Window
@@ -24,12 +27,14 @@ class MainActivity : ComponentActivity() {
 	@javax.inject.Inject lateinit var db: com.eva.database.RecorderDataBase
 
 	private var navController: NavHostController? = null
+	private var homeRequest by mutableIntStateOf(0)
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		// splash needs to be initiated here
 		val splash = installSplashScreen()
 
 		super.onCreate(savedInstanceState)
+		if (intent.getBooleanExtra("return_to_home", false)) homeRequest++
 		if (intent.getBooleanExtra("request_recording_name", false)) {
 			sessions.namingRequested.value = true
 			intent.removeExtra("request_recording_name")
@@ -46,7 +51,7 @@ class MainActivity : ComponentActivity() {
 		setContent {
 			RecorderAppTheme {
 				Surface(color = MaterialTheme.colorScheme.background) {
-					MainContent(this, sessions, backup, db) { readOnly -> AppNavHost(
+					MainContent(this, sessions, backup, db, homeRequest) { readOnly -> AppNavHost(
 						startInLibrary = readOnly,
 						onSetController = { controller ->
 							navController = controller
@@ -63,7 +68,13 @@ class MainActivity : ComponentActivity() {
 			sessions.namingRequested.value = true
 			intent.removeExtra("request_recording_name")
 		}
-		navController?.handleDeepLink(intent)
+		if (intent.getBooleanExtra("return_to_home", false)) homeRequest++
+		else navController?.handleDeepLink(intent)
+	}
+
+	override fun onStart() {
+		super.onStart()
+		backup.checkOnLaunch()
 	}
 
 	@Suppress("DEPRECATION")

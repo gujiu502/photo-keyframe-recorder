@@ -25,7 +25,8 @@ class DriveUploadWorker @AssistedInject constructor(@Assisted context: Context, 
         catch (e: Exception) {
             val state = when (e) { is DriveAuthorizationRequired -> "AUTH_REQUIRED"; is DriveHttpError -> e.state; is com.google.android.gms.common.api.ApiException -> if (e.statusCode in setOf(4, 16, 12501)) "AUTH_REQUIRED" else "FAILED_RETRYABLE"; is IOException -> "FAILED_RETRYABLE"; else -> "PERMANENT_FAILURE" }
             val row = db.cloudDao().backup(id)
-            if (row != null) db.cloudDao().put(row.copy(state = state, errorCode = e.message?.take(500)))
+            if (row != null && row.state != "DELETED" && !row.state.startsWith("DELETE_"))
+                db.cloudDao().put(row.copy(state = state, errorCode = e.message?.take(500)))
             for (file in db.cloudDao().files(id).filter { it.state == "UPLOADING" }) db.cloudDao().putFile(file.copy(state = "FAILED_RETRYABLE"))
             if (state == "FAILED_RETRYABLE" || e.message?.contains("照片仍在保存") == true) Result.retry() else Result.failure()
         }

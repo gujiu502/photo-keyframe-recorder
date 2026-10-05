@@ -57,7 +57,7 @@ fun AccountGate(activity: ComponentActivity, backup: DriveBackup, db: RecorderDa
         val selected = GoogleAccount(activity).signIn(activity, BuildConfig.GOOGLE_WEB_CLIENT_ID, automatic)
         db.withTransaction {
         check(!db.sessionDao().recordingBusy()) { "錄音結束後才能切換 Google 帳號" }
-        check(db.cloudDao().all().none { it.accountId != selected.first && it.state != "COMPLETE" }) { "原帳號仍有待備份課程，請先完成或處理備份再切換帳號" }
+        check(db.cloudDao().all().none { it.accountId != selected.first && it.state !in setOf("COMPLETE", "DELETED") }) { "原帳號仍有待備份課程，請先完成或處理備份再切換帳號" }
         val changed = settings.accountId != selected.first
         settings.prefs.edit().putString("account_id", selected.first).putString("email", selected.second)
             .apply { if (changed) putBoolean("drive_authorized", false) }.commit()

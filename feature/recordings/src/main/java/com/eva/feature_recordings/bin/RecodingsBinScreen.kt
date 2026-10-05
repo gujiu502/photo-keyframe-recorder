@@ -1,6 +1,7 @@
 package com.eva.feature_recordings.bin
 
 import androidx.activity.compose.BackHandler
+import com.eva.ui.navigation.LocalNavigateHome
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,9 +59,10 @@ internal fun RecordingsBinScreen(
 		}
 	}
 
+	val goHome = LocalNavigateHome.current
 	BackHandler(
 		enabled = isAnySelected,
-		onBack = { onScreenEvent(TrashRecordingScreenEvent.OnUnSelectTrashRecording) },
+		onBack = { onScreenEvent(TrashRecordingScreenEvent.OnUnSelectTrashRecording); goHome() },
 	)
 
 	Scaffold(
