@@ -1,6 +1,6 @@
 Photo Keyframe Recorder v0.2.0，Android 10 及以上。
 
-**Google 授权限制：目前 Google OAuth 仍处于「测试」状态，只有项目测试名单中的账号可以完成首次登录和 Drive 授权。未在名单中的用户会被 Google 拒绝，无法开始新版首次录音。开发者账号已通过真实登录和备份验证；面向所有账号的授权仍需在 Google Console 完成品牌配置与正式发布。需要直接离线录音的用户可继续使用 v0.1.0。**
+Google 登录和 Drive 备份已用正式签名 APK 实测通过。2026-10-05 项目管理员已确认在 Google Console 发布应用，完成 OAuth 受众的正式发布。
 
 - 首次接受版本化协议，使用 Google 登录并授权 Drive 的 `drive.file`。
 - 每堂课按课程分类自动备份，断网排队、逐文件保存上传进度、音讯断点续传和 SHA-256 验证；保留本地原件。

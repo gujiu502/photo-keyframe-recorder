@@ -2,7 +2,7 @@
 
 首次 Google 登入及 Drive 備份需要你管理的 Google Cloud 專案。APK 不含 client secret，也不需要開發者伺服器。
 
-本專案使用 Google Cloud `photo-510704`（專案號碼 `64305210130`）。正式簽名 APK 的真實登入與 Drive 備份已通過；Google 受眾正式發布與品牌設定是另外的控制台步驟。
+本專案使用 Google Cloud `photo-510704`（專案號碼 `64305210130`）。正式簽名 APK 的真實登入與 Drive 備份已通過；2026-10-05 專案管理員已確認在 Google Console 發布應用。Google 受眾正式發布與品牌驗證是另外的控制台步驟。
 
 品牌配置的公開文件：
 

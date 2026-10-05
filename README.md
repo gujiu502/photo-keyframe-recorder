@@ -4,7 +4,7 @@
 
 **[下载 v0.2.0 APK](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.2.0)** · [v0.1.0 离线版](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.1.0) · [所有版本](https://github.com/gujiu502/photo-keyframe-recorder/releases) · [实现与验证说明](docs/IMPLEMENTATION.md)
 
-当前为公开预览版。v0.2.0 的 Google OAuth 仍处于「测试」状态，只有测试名单账号可完成首次登录及 Drive 授权；其他账号会被 Google 拒绝，无法开始新版首次录音。需要直接离线录音可使用 v0.1.0。完整的两小时录音压力测试及不同实体手机验证尚未完成，请先用短录音确认你的设备兼容性。
+当前为公开预览版。v0.2.0 首次设置需 Google 登录和 Drive 授权；2026-10-05 项目管理员已确认在 Google Console 发布应用。需要直接离线录音可使用 v0.1.0。完整的两小时录音压力测试及不同实体手机验证尚未完成，请先用短录音确认你的设备兼容性。
 
 ## 使用
 
@@ -23,7 +23,7 @@
 
 v0.1.0 包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出，无账号或云上传。
 
-v0.2.0 包含版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。正式签名 APK 已通过真实 Google 登录和 Drive 备份；目前以预览版发布，面向所有账号的授权仍需完成 [Google 品牌与受众配置](docs/GOOGLE_SETUP.md)。没有广告或分析 SDK。
+v0.2.0 包含版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。正式签名 APK 已通过真实 Google 登录和 Drive 备份；Google Console 的应用发布也已由项目管理员确认。后续配置见 [Google 设置说明](docs/GOOGLE_SETUP.md)。没有广告或分析 SDK。
 
 [应用首页](https://gujiu502.github.io/photo-keyframe-recorder/) · [隐私政策](https://gujiu502.github.io/photo-keyframe-recorder/privacy.html) · [使用条款](https://gujiu502.github.io/photo-keyframe-recorder/terms.html)
 
