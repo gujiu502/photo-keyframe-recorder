@@ -2,6 +2,18 @@
 
 首次 Google 登入及 Drive 備份需要你管理的 Google Cloud 專案。APK 不含 client secret，也不需要開發者伺服器。
 
+本專案使用 Google Cloud `photo-510704`（專案號碼 `64305210130`）。正式簽名 APK 的真實登入與 Drive 備份已通過；Google 受眾正式發布與品牌設定是另外的控制台步驟。
+
+品牌配置的公開文件：
+
+- 應用首頁：`https://gujiu502.github.io/photo-keyframe-recorder/`
+- 隱私政策：`https://gujiu502.github.io/photo-keyframe-recorder/privacy.html`
+- 使用條款：`https://gujiu502.github.io/photo-keyframe-recorder/terms.html`
+- 支援與開發者聯絡信箱：`gujiu502@gmail.com`
+- 網域：`gujiu502.github.io`。如果 Google 要求驗證擁有權，需由此 Cloud 專案的擁有者或編輯者在 Google Search Console 完成；網站可加入 Google 提供的驗證 HTML 檔或 meta 標籤，不能以 GitHub 登入代替 Google 網域驗證。
+
+在 [品牌頁](https://console.cloud.google.com/auth/branding?project=photo-510704) 保存所需設定，再至 [受眾頁](https://console.cloud.google.com/auth/audience?project=photo-510704) 發布應用；完成的判準是頁面顯示「正式發布／In production」。若控制台仍要求補齊配置或品牌驗證，依實際錯誤處理，不將「已保存」當作「已發布」。
+
 1. 在 Google Cloud 啟用 Google Drive API，填寫 Google Auth Platform 的品牌、支援信箱、隱私政策及使用條款。
 2. 建立 **Web 應用程式** OAuth 客戶端。客戶端 ID 是公開識別值，以 `.apps.googleusercontent.com` 結尾；本 App 不使用 client secret。
 3. 建立 Android OAuth 客戶端，依下表填寫包名及 SHA-1。

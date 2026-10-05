@@ -18,4 +18,6 @@ Photo Keyframe Recorder v0.2.0，Android 10 及以上。
 
 APK 使用正式独立签名；SHA256SUMS.txt 可验证下载完整性。
 
+已用正式签名 APK 实测 Google 登录、Drive 授权及新旧录音备份；录音、三张 CameraX 照片、文件命名、ZIP 导出与异常恢复通过完整设备流程。导出的音频与原件逐字节一致，照片、时间轴、Markdown 及 ZIP CRC 验证通过。断线续传、重复上传及配额不足通过模拟 HTTPS 协议测试；真实账号的断网与撤销授权场景仍待验证。
+
 这是预览版。连续两小时录音搭配 100 次 CameraX 拍摄、实体手机来电／耳机／低空间等场景尚未完成验证。被强制终止的 AAC/MP4 可能不能直接播放，应用会保留原始文件并提供导出入口。完整验证范围见仓库 docs/IMPLEMENTATION.md。

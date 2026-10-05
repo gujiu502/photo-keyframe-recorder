@@ -23,7 +23,9 @@
 
 v0.1.0 包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出，无账号或云上传。
 
-当前源码开发 v0.2.0：版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。新版本发布前必须完成 [Google OAuth 配置](docs/GOOGLE_SETUP.md) 和真实账号验证。没有广告或分析 SDK。
+v0.2.0 源码包含版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。正式签名 APK 已通过真实 Google 登录和 Drive 备份；公开发布仍需完成 [Google 品牌与受众配置](docs/GOOGLE_SETUP.md)。没有广告或分析 SDK。
+
+[应用首页](https://gujiu502.github.io/photo-keyframe-recorder/) · [隐私政策](https://gujiu502.github.io/photo-keyframe-recorder/privacy.html) · [使用条款](https://gujiu502.github.io/photo-keyframe-recorder/terms.html)
 
 ## 构建
 

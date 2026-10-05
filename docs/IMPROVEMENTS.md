@@ -30,8 +30,16 @@ GitHub Android 14 的資料庫、模擬續傳、簽名及離線授權檢查通�
 
 已授權離線情境的完整 UI 測試通過：實際 CameraX 拍攝三張照片（兩張在暫停中）、背景返回、檔名自動日期時間、Android 文件選擇器導出 ZIP及強制停止恢復。ZIP 音訊 383594 bytes 與原件一致，三張 JPEG、時間軸、Markdown 及 CRC 均通過。測試帳號僅由 instrumentation 設定，正式 App 沒有跳過 Google 登入的入口。
 
+## 2026-10-05 真實 Google 帳號驗證
+
+已配置 GitHub `GOOGLE_WEB_CLIENT_ID`，正式 Android OAuth 客戶端使用既有簽名。重新建置的正式 Direct APK、Play AAB、JVM 檢查及 Release lint 通過。
+
+正式簽名 APK 已完成真實 Google 登入、`drive.file` 授權和 Drive 根資料夾建立。新錄音與升級前既有錄音均在雲端狀態顯示「☁ 已備份」；此狀態僅在檔案大小、伺服器 SHA-256 及最終 manifest 驗證成功後寫入。
+
+正式版完整 UI 流程通過：三張實際 CameraX 照片、暫停拍攝、背景返回、檔名自動日期時間、Android 文件選擇器 ZIP 導出和強制停止後恢復。ZIP 驗證包含 63937 bytes 音訊與原件逐位元組相同、三張 JPEG、三項排序時間軸、UTF-8 Markdown 和 CRC。
+
 ## 尚待外部設定／驗證
 
-尚未取得 Google OAuth Web client ID，也未驗證 Android OAuth 客戶端設定。真實 Google 登入、Drive 授權、上傳／撤銷／重新授權及 Google Play 更新仍待實測；詳見 [設定說明](GOOGLE_SETUP.md)。缺少配置時不發布 v0.2.0 更新，現有 v0.1.0 APK 繼續提供下載。
+Google 受眾目前仍為「測試」，需補齊品牌配置並切換為正式發布後才向一般使用者發布新版。真實帳號的中途斷網、撤銷／重新授權及 Google Play 商店更新仍待實測；目前斷線／續傳及授權失效的驗證來自自動化測試，不能等同真實 Google 故障測試。詳見 [設定說明](GOOGLE_SETUP.md)。
 
 兩小時連續錄音與 100 張真實 CameraX 照片的壓力測試、實體手機的來電／低儲存空間情境仍待驗證。遠端還原依設計留到 V1.1。
