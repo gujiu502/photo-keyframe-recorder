@@ -27,6 +27,7 @@ class RecorderWidgetReceiver : GlanceAppWidgetReceiver() {
 		// receive the actions and do stuff
 		if (intent.action == IntentConstants.ACTION_UPDATE_WIDGET) {
 			val timeInSeconds = intent.getIntExtra(IntentConstants.EXTRAS_RECORDER_TIME, -1)
+			if (timeInSeconds !in 0 until 86_400) return
 			val stateAsString = intent.getStringExtra(IntentConstants.EXTRAS_RECORDER_STATE)
 
 			val localTime = LocalTime.fromSecondOfDay(timeInSeconds)

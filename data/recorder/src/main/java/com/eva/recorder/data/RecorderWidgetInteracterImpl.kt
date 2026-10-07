@@ -15,6 +15,8 @@ class RecorderWidgetInteracterImpl(private val context: Context) : RecorderWidge
 
 	override suspend fun updateWidget(state: RecorderState, time: LocalTime?) {
 		try {
+			val receiver = android.content.ComponentName(context, IntentConstants.RECORDER_WIDGET_RECEIVER)
+			if (android.appwidget.AppWidgetManager.getInstance(context).getAppWidgetIds(receiver).isEmpty()) return
 			val intent = Intent().apply {
 				setClassName(context.applicationContext, IntentConstants.RECORDER_WIDGET_RECEIVER)
 				action = IntentConstants.ACTION_UPDATE_WIDGET

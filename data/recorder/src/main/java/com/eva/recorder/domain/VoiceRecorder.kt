@@ -21,6 +21,7 @@ interface VoiceRecorder {
 	 * A series of data-points for the current recording.
 	 */
 	val dataPoints: Flow<List<RecordedPoint>>
+	val errors: Flow<String>
 
 	/**
 	 * A flow determining how long the recording has been started

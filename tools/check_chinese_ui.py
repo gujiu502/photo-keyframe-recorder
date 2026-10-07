@@ -12,6 +12,8 @@ technical = {
 }
 count = 0
 for path in Path(".").glob("**/src/main/res/values/*.xml"):
+    if path.parts[0] == "third_party":
+        continue  # Upstream sample apps are not packaged into our APK.
     for entry in ET.parse(path).getroot():
         if entry.tag != "string":
             continue

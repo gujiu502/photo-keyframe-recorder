@@ -9,6 +9,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -29,6 +31,14 @@ jobs:
           script: |
             ./gradlew :data:database:connectedDebugAndroidTest :data:cloud:connectedDebugAndroidTest :app:assembleDirectDebug :app:assembleDirectDebugAndroidTest :app:installDirectDebug
             mkdir -p work
+            ./gradlew :data:transcription:assembleDebugAndroidTest
+            curl -fL --retry 3 'https://huggingface.co/ggerganov/whisper.cpp/resolve/80da2d8bfee42b0e836fc3a9890373e5defc00a6/ggml-tiny.bin' -o work/ggml-tiny.bin
+            echo 'be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21  work/ggml-tiny.bin' | sha256sum -c
+            adb install -r data/transcription/build/outputs/apk/androidTest/debug/transcription-debug-androidTest.apk
+            adb shell mkdir -p /sdcard/Android/data/com.eva.transcription.test/files
+            adb push work/ggml-tiny.bin /sdcard/Android/data/com.eva.transcription.test/files/
+            adb shell am instrument -w com.eva.transcription.test/com.eva.testing.runtime.HiltTestRunner | tee work/whisper-instrumentation.log
+            python3 -c 'from pathlib import Path; import re; result = Path("work/whisper-instrumentation.log").read_text(); assert re.search(r"OK \([1-9][0-9]* tests?\)", result) and not re.search(r"FAILURES|INSTRUMENTATION_FAILED|Process crashed", result), result'
             ./gradlew :app:signingReport --console=plain > work/signing-report.txt
             python3 tools/update_test_fixtures.py app/build/outputs/apk/direct/debug/app-direct-debug.apk "$ANDROID_HOME" "$(python3 -c 'import re; from pathlib import Path; print(re.search(r"(?m)^Store: (.+debug\.keystore)$", Path("work/signing-report.txt").read_text())[1])')" work/update-fixtures
             adb shell mkdir -p /sdcard/Android/data/com.gujiu502.lectureframe.debug/files
@@ -39,6 +49,7 @@ jobs:
             adb shell settings put global heads_up_notifications_enabled 0
             python3 tools/ui_smoke.py
             python3 tools/back_navigation_smoke.py --package com.gujiu502.lectureframe.debug
+            python3 tools/whisper_ui_smoke.py --serial "$(adb get-serialno)" --package com.gujiu502.lectureframe.debug
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -46,4 +57,6 @@ jobs:
           path: |
             **/build/outputs/androidTest-results/**
             work/app-instrumentation.log
+            work/whisper-instrumentation.log
             work/ui-smoke-*/**
+            work/whisper-ui-smoke/**

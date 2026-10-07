@@ -26,6 +26,7 @@ dependencies {
 	implementation(project(":data:bookmarks"))
 	implementation(project(":data:recordings"))
 	implementation(project(":data:database"))
+	implementation(project(":data:transcription"))
 	implementation("io.coil-kt:coil-compose:2.7.0")
 	implementation(project(":data:interactions"))
 

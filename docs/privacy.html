@@ -3,13 +3,16 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>照片关键帧录音 — 隐私政策</title></head>
 <body><main>
 <h1>照片关键帧录音隐私政策</h1>
-<p>适用于 Photo Keyframe Recorder（Android 包名 com.gujiu502.lectureframe）。更新日期：2026 年 10 月 5 日。</p>
+<p>适用于 Photo Keyframe Recorder（Android 包名 com.gujiu502.lectureframe）。更新日期：2026 年 10 月 7 日。</p>
 <h2>录音与照片</h2>
 <p>应用在你操作录音和拍照时使用麦克风、相机，并在设备上保存音频、照片关键帧、时间轴、课程名称及相关元数据。你可以查看、导出和删除这些内容。应用不包含广告或分析 SDK。</p>
 <h2>Google 登录及 Google Drive</h2>
 <p>应用通过 Google 登录确认账号身份，在设备上保存账号标识及邮箱，用于显示账号和将备份绑定到正确账号。应用不收集 Google 密码，不在自己的持久化存储中保存 Google ID token 或 Drive access token；授权凭证由 Google 的系统组件管理。</p>
 <p>应用只申请 Google Drive 的 drive.file 权限，访问它创建或经你授权给它使用的文件，不申请读取整个云端硬盘的权限。接受应用协议并完成授权后，已保存的录音、照片、时间轴、笔记及课程元数据会直接上传到你自己的 Google Drive「課程錄音」文件夹。应用记录远端文件标识、大小、校验值及上传进度，以重试和续传备份。</p>
 <p>Google 用户数据只用于账号识别、录音备份及管理这些备份。应用不出售 Google 用户数据，不将其用于广告、训练通用人工智能模型或无关用途，也不向开发者服务器上传这些数据。对 Google API 所提供数据的使用和转移遵守 Google API Services User Data Policy，包括其 Limited Use 要求。</p>
+<h2>本地 Whisper 语音识别</h2>
+<p>你可以选择当前或以前的已完成录音，在设备上用 Whisper Tiny 模型识别，并随时停止。音频识别在手机本地执行，不会将音频发送到识别服务器。首次按你的选择从 Hugging Face 下载约 74 MiB 的模型并验证 SHA-256；下载服务可能按其政策处理 IP 地址和请求信息。模型可重复离线使用。</p>
+<p>识别文字及分段时间保存在手机，停止后已完成的分段仍保留。你可以导出文字；已有结果会包含在 ZIP 的 Markdown 中，使用 Drive 备份时相应讲义文件会按原有备份规则上传。永久删除本地录音会清理关联识别文字。</p>
 <h2>数据传输及第三方</h2>
 <p>登录与云端备份通过 HTTPS 连接 Google 服务。Direct 版本通过 HTTPS 连接 GitHub 检查及下载应用更新；Play 版本通过 Google Play 更新。网络服务可能按其各自政策处理 IP 地址和请求信息。应用不会为了检查更新把录音或照片发送给 GitHub。你主动导出或分享的数据会交给你选择的目标。</p>
 <h2>保存、删除及撤销授权</h2>

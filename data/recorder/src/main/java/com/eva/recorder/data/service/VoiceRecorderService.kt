@@ -64,6 +64,11 @@ internal class VoiceRecorderService : LifecycleService() {
 	private var ending = false
 	private var starting = false
 	private var heartbeat: kotlinx.coroutines.Job? = null
+	private val recordingWakeLock by lazy {
+		(getSystemService(POWER_SERVICE) as android.os.PowerManager)
+			.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "$packageName:recording")
+			.apply { setReferenceCounted(false) }
+	}
 
 	private val binder = LocalBinder()
 
@@ -122,6 +127,10 @@ internal class VoiceRecorderService : LifecycleService() {
 			showBluetoothConnectedToast()
 			// update the notification
 			readTimerAndUpdateNotification()
+			voiceRecorder.errors.onEach { message ->
+				showSaveRecordingErrorMessage(message)
+				onStopRecording("異常恢復", "未分類")
+			}.launchIn(lifecycleScope)
 			// update widget state
 			updateRecorderWidgetState()
 			Log.i(LOGGER_TAG, "SERVICE CREATED WITH OBSERVERS")
@@ -184,18 +193,27 @@ internal class VoiceRecorderService : LifecycleService() {
 		startVoiceRecorderService(NotificationConstants.RECORDER_NOTIFICATION_ID, notificationHelper.timerNotification)
 		lifecycleScope.launch {
 			try {
-				voiceRecorder.startRecording()
-				heartbeat = lifecycleScope.launch {
+				recordingWakeLock.acquire()
+				kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voiceRecorder.startRecording() }
+				heartbeat = lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
 					while (true) {
 						kotlinx.coroutines.delay(5000)
 						val id = sessions.activeId.value ?: break
-						sessions.dao.state(id, if (recorderState.value == RecorderState.PAUSED) "PAUSED" else "ACTIVE", sessions.position())
+						try { sessions.dao.state(id, if (recorderState.value == RecorderState.PAUSED) "PAUSED" else "ACTIVE", sessions.position()) }
+						catch (e: Exception) {
+							kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+								showSaveRecordingErrorMessage("無法更新錄音資料，正在保留音訊：${e.localizedMessage ?: ""}")
+								onStopRecording("異常恢復", "未分類")
+							}
+							break
+						}
 					}
 				}
 			} catch (e: Exception) {
 				showSaveRecordingErrorMessage(e.message ?: "無法開始錄音")
-				sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) }
+				runCatching { sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) } }
 				sessions.activeId.value = null
+				if (recordingWakeLock.isHeld) recordingWakeLock.release()
 				stopForeground(STOP_FOREGROUND_REMOVE)
 				stopSelf()
 			} finally { starting = false }
@@ -214,7 +232,13 @@ internal class VoiceRecorderService : LifecycleService() {
 		notificationHelper.setOnResumeNotification()
 		//resume recording
 		lifecycleScope.launch {
-			voiceRecorder.resumeRecording()
+			try {
+				recordingWakeLock.acquire()
+				kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voiceRecorder.resumeRecording() }
+			} catch (e: Exception) {
+				showSaveRecordingErrorMessage(e.message ?: "無法繼續錄音，正在保留原件")
+				onStopRecording("異常恢復", "未分類")
+			}
 		}
 	}
 
@@ -224,7 +248,13 @@ internal class VoiceRecorderService : LifecycleService() {
 		notificationHelper.setOnPauseNotification()
 		//pause recording
 		lifecycleScope.launch {
-			voiceRecorder.pauseRecording()
+			try {
+				kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voiceRecorder.pauseRecording() }
+				if (recordingWakeLock.isHeld) recordingWakeLock.release()
+			} catch (e: Exception) {
+				showSaveRecordingErrorMessage(e.message ?: "無法暫停錄音，正在保留原件")
+				onStopRecording("異常恢復", "未分類")
+			}
 		}
 	}
 
@@ -234,13 +264,14 @@ internal class VoiceRecorderService : LifecycleService() {
 		heartbeat?.cancel()
 		lifecycleScope.launch {
 			// cancel recording
-			voiceRecorder.cancelRecording()
+			kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voiceRecorder.cancelRecording() }
 			//clear bookmarks
 			clearBookMarks()
 			//update widget
 			widgetFacade.resetWidget()
 		}.invokeOnCompletion {
 			// stop the foreground
+			if (recordingWakeLock.isHeld) recordingWakeLock.release()
 			ending = false
 			stopForeground(STOP_FOREGROUND_REMOVE)
 			// stop the service
@@ -255,13 +286,15 @@ internal class VoiceRecorderService : LifecycleService() {
 		// stop the recording
 		lifecycleScope.launch {
 			val result = try {
-				sessions.activeId.value?.let { id ->
+				val naming = runCatching { sessions.activeId.value?.let { id ->
 					val courseName = course.trim().ifEmpty { "未分類" }
 					check(com.eva.recorder.domain.models.isValidRecordingName(courseName)) { "課程名稱無效" }
 					sessions.dao.course(id, courseName)
 					sessions.dao.fileName(id, com.eva.recorder.domain.models.recordingFileStem(name ?: "錄音"))
-				}
-				voiceRecorder.stopRecording()
+				} }
+				val stopped = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { voiceRecorder.stopRecording() }
+				naming.getOrThrow() // Filename DB failures must still close the native audio container.
+				stopped
 			} catch (e: Exception) { Result.failure(e) }
 			result.fold(
 				onSuccess = { recordingId ->
@@ -271,7 +304,7 @@ internal class VoiceRecorderService : LifecycleService() {
 					notificationHelper.showCompletedNotificationWithIntent(recordingId)
 				},
 				onFailure = { error ->
-					sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) }
+					runCatching { sessions.activeId.value?.let { sessions.dao.state(it, "RECOVERY_REQUIRED", sessions.position()) } }
 					sessions.activeId.value = null
 					val message = error.message ?: ""
 					showSaveRecordingErrorMessage(message)
@@ -281,6 +314,7 @@ internal class VoiceRecorderService : LifecycleService() {
 			widgetFacade.resetWidget()
 		}.invokeOnCompletion {
 			//clear and save bookmarks
+			if (recordingWakeLock.isHeld) recordingWakeLock.release()
 			ending = false
 			// stop the foreground
 			stopForeground(STOP_FOREGROUND_REMOVE)
@@ -304,6 +338,7 @@ internal class VoiceRecorderService : LifecycleService() {
 	}
 
 	override fun onDestroy() {
+		if (recordingWakeLock.isHeld) recordingWakeLock.release()
 		// close sco connection
 		bluetoothScoUseCase.closeConnectionIfPresent()
 		// resources are cleared

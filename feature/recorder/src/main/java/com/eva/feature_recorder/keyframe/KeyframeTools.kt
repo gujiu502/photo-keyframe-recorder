@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.eva.database.formatPosition
+import com.eva.feature_recorder.composable.SaveRecordingDialog
 import com.eva.recorder.domain.models.RecorderState
 import java.io.File
 
@@ -48,7 +49,7 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: 
     LaunchedEffect(namingRequested, state) {
         if (namingRequested && state == RecorderState.RECORDING) onAction(com.eva.recorder.domain.models.RecorderAction.PauseRecorderAction)
     }
-    com.eva.feature_recorder.composable.SaveRecordingDialog(
+    SaveRecordingDialog(
         showDialog = namingRequested && state == RecorderState.PAUSED && active != null,
         onDismiss = { vm.sessions.namingRequested.value = false },
         onSave = { name, course -> onAction(com.eva.recorder.domain.models.RecorderAction.SaveRecorderAction(name, course)) },
@@ -120,10 +121,10 @@ private fun KeyframeCamera(timer: () -> String, busy: Boolean, vm: KeyframeViewM
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE } }
-    val capture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+    val capture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).setJpegQuality(85)
         .setResolutionSelector(ResolutionSelector.Builder().setResolutionStrategy(
             ResolutionStrategy(Size(1600, 1200), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)).build()).build() }
-    val preview = remember { Preview.Builder().build() }
+    val preview = remember { Preview.Builder().setResolutionSelector(ResolutionSelector.Builder().setResolutionStrategy(ResolutionStrategy(Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)).build()).build() }
     var ready by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var flash by remember { mutableStateOf(false) }

@@ -41,6 +41,11 @@ class LectureExporter @Inject constructor(@ApplicationContext private val contex
                 .put("positionMs", bookmark.timeStamp.toMillisecondOfDay().toLong()).put("text", bookmark.text))
         }
         val sorted = (0 until timeline.length()).map { timeline.getJSONObject(it) }.sortedBy { it.getLong("positionMs") }
+        val transcript = session?.let { File(context.filesDir, "keyframes/${it.sessionId}/transcript.txt") }
+            ?: recordingId?.let { File(context.filesDir, "transcripts/$it.txt") }
+        if (transcript != null && (transcript.exists() || File(transcript.path + ".bak").exists())) {
+            markdown.append("## Whisper 本地語音識別\n\n").append(android.util.AtomicFile(transcript).openRead().bufferedReader(Charsets.UTF_8).use { it.readText() }).append('\n')
+        }
         val extension = session?.audioPath?.substringAfterLast('.', "m4a") ?: "m4a"
         val audioName = "audio/lecture.$extension"
         val manifest = JSONObject().put("schemaVersion", 1).put("title", title)

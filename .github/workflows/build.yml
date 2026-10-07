@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -18,7 +20,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
       - run: python3 tools/check_chinese_ui.py
-      - run: ./gradlew :app:assembleDirectDebug :app:compilePlayDebugKotlin :data:recorder:testDebugUnitTest :data:cloud:testDebugUnitTest :app:lintDirectDebug
+      - run: ./gradlew :app:assembleDirectDebug :app:compilePlayDebugKotlin :data:recorder:testDebugUnitTest :data:transcription:testDebugUnitTest :data:cloud:testDebugUnitTest :app:lintDirectDebug
       - uses: actions/upload-artifact@v4
         with:
           name: debug-apk

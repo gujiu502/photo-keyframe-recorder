@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.eva.datastore.domain.repository.RecorderAudioSettingsRepo
 import com.eva.location.domain.repository.LocationProvider
-import com.eva.recorder.data.reader.AudioRecordAmplitudeReader
+import com.eva.recorder.data.reader.MediaRecorderAmplitudeReader
 import com.eva.recorder.domain.VoiceRecorder
 import com.eva.recorder.domain.exceptions.RecorderNotConfiguredException
 import com.eva.recorder.domain.models.RecordedPoint
@@ -52,10 +52,9 @@ internal class VoiceRecorderImpl(
 	init { sessions.position = _stopWatch::currentPositionMs }
 
 	private val _pcmReader by lazy {
-		AudioRecordAmplitudeReader(
-			context = context,
-			stopWatch = _stopWatch,
-			delayRate = sampleTime
+		MediaRecorderAmplitudeReader(
+			amplitude = { _recorder?.maxAmplitude ?: 0 },
+			position = _stopWatch::currentPositionMs,
 		)
 	}
 
@@ -81,8 +80,9 @@ internal class VoiceRecorderImpl(
 		get() = _stopWatch.recorderState
 			.flatMapLatest(_pcmReader::readAmplitudeBuffered)
 
+	override val errors = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
 	private val errorListener = MediaRecorder.OnErrorListener { _, what, extra ->
-		if (what == MediaRecorder.MEDIA_ERROR_SERVER_DIED) releaseResources()
+		errors.tryEmit("錄音器發生錯誤（$what/$extra），正在保留錄音與照片")
 		Log.w(TAG, "SOME ERROR OCCURRED :$what CODE: $extra")
 	}
 
@@ -104,6 +104,10 @@ internal class VoiceRecorderImpl(
 		else MediaRecorder()
 
 		_recorder?.setOnErrorListener(errorListener)
+		_recorder?.setOnInfoListener { _, what, _ ->
+			if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED || what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED)
+				errors.tryEmit("已達到系統錄音限制，正在保存錄音與照片")
+		}
 		Log.d(TAG, "CREATED RECORDER AND AMPLITUDE SUCCESSFULLY")
 		return true
 	}
@@ -126,11 +130,6 @@ internal class VoiceRecorderImpl(
 
 		// recorder should be ready by now
 		val recorder = _recorder ?: return@coroutineScope
-		// initiate the amplitude reader
-		_pcmReader.initiateRecorder(
-			sampleRate = quality.sampleRate,
-			isStereo = audioSettings.enableStereo
-		)
 
 		// ensures the file is being created in a different coroutine
 		val fileDeferred = async {
@@ -205,7 +204,6 @@ internal class VoiceRecorderImpl(
 			// resets the recorder for  next recording
 			Log.d(TAG, "RESTING THE RECORDER")
 			_recorder?.reset()
-			_pcmReader.releaseRecorder()
 		}
 	}
 
@@ -224,7 +222,6 @@ internal class VoiceRecorderImpl(
 			// resets the recorder for  next recording
 			Log.d(TAG, "RESTING THE RECORDER")
 			_recorder?.reset()
-			_pcmReader.releaseRecorder()
 		}
 	}
 
@@ -244,7 +241,6 @@ internal class VoiceRecorderImpl(
 			_recorder?.prepare()
 			Log.d(TAG, "RECORDER PREPARED")
 			//start the recorder
-			_pcmReader.startRecorder()
 			_recorder?.start()
 			_stopWatch.startOrResume()
 			Log.d(TAG, "RECORDER STARTED")
@@ -255,12 +251,13 @@ internal class VoiceRecorderImpl(
 		// staring an operation lock it
 		return _lock.withLock(this) {
 			val file = _recordingFile ?: return Result.failure(RecorderNotConfiguredException())
-			sessions.activeId.value?.let { sessions.dao.state(it, "FINALIZING", _stopWatch.currentPositionMs()) }
+			val metadata = runCatching { sessions.activeId.value?.let { sessions.dao.state(it, "FINALIZING", _stopWatch.currentPositionMs()) } }
 			// reset the timer
 			Log.d(TAG, "STOPWATCH STOPPED")
 			_stopWatch.stop()
 			//stop the ongoing recording
 			_recorder?.stop()
+			metadata.getOrThrow() // Even a full/failed DB must not prevent closing the audio container.
 			Log.d(TAG, "RECORDER STOPPED")
 			Result.success(0L)
 			// update the file
@@ -326,7 +323,6 @@ internal class VoiceRecorderImpl(
 			//set recording file to null
 			_recordingFile = null
 			//set buffer reader to null
-			_pcmReader.releaseRecorder()
 			// clear the recorder resources
 			Log.d(TAG, "RELEASE RECORDER")
 			_recorder?.release()

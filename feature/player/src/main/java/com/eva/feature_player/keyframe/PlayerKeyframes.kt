@@ -48,6 +48,7 @@ internal fun PlayerKeyframes(id: Long, audioUri: String, title: String, currentP
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("關鍵幀 ${items.size}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            TranscriptionTools(id, audioUri, title)
             TextButton(onClick = { items.lastOrNull { it.positionMs < currentPosition() - 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("上一幀") }
             TextButton(onClick = { items.firstOrNull { it.positionMs > currentPosition() + 300 }?.let { onSeek(it.positionMs) } }, enabled = items.isNotEmpty()) { Text("下一幀") }
             TextButton(onClick = { export.launch("${title.replace(Regex("[\\\\/:*?\"<>|]"), "_")}.zip") }, enabled = !exporting) { Text(if (exporting) "導出中" else "導出") }

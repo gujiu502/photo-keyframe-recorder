@@ -12,13 +12,15 @@ plugins {
 android {
 	namespace = "com.eva.recorderapp"
 	compileSdk = libs.versions.compileSdk.get().toInt()
+	ndkVersion = "28.2.13676358"
 
 	defaultConfig {
 		applicationId = "com.gujiu502.lectureframe"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 3
-		versionName = "0.2.1"
+		versionCode = 4
+		versionName = "0.3.0"
+		ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
 		val webClientId = providers.gradleProperty("GOOGLE_WEB_CLIENT_ID").orElse(providers.environmentVariable("GOOGLE_WEB_CLIENT_ID")).getOrElse("")
 		require(webClientId.isEmpty() || webClientId.matches(Regex("[A-Za-z0-9.-]+\\.apps\\.googleusercontent\\.com")))
 		buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$webClientId\"")

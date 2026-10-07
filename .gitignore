@@ -20,3 +20,4 @@ keystore.properties
 **/build/
 work/
 *-check.png
+__pycache__/

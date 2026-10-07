@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--package', default='com.gujiu502.lectureframe')
 parser.add_argument('--serial')
 parser.add_argument('--dialogs-only', action='store_true')
-args = parser.parse_args()
+args = parser.parse_args() if __name__ == "__main__" else parser.parse_args([])
 adb = [os.environ.get('ADB', 'adb')] + (['-s', args.serial] if args.serial else [])
 xml_path = '/sdcard/keyframe-back-test.xml'
 
@@ -59,7 +59,8 @@ def home():
 
 
 def launch():
-    run('shell', 'am', 'start', '-n', args.package + '/com.eva.recorderapp.MainActivity')
+    run('shell', 'am', 'start', '-n', args.package + '/com.eva.recorderapp.MainActivity',
+        '-a', 'android.intent.action.VIEW', '-d', 'app://com.gujiu502.lectureframe')
     home()
 
 
@@ -103,90 +104,97 @@ def check_dialogs():
     print('PASS: rename dialog -> recorder -> launcher')
 
 
-try:
-    launch()
-    if args.dialogs_only:
-        check_dialogs()
-        raise SystemExit(0)
-    tap('雲端備份與更新')
-    find('我的雲端硬碟 / 課程錄音\n備份完成後，本地原始資料仍會保留。')
-    back()
-    exit_from_home()
-    print('PASS: cloud page -> recorder -> launcher')
-
-    tap('更多選項')
-    tap('設定')
-    find('錄音品質')
-    back()
-    exit_from_home()
-    print('PASS: settings -> recorder -> launcher')
-
-    tap('更多選項')
-    tap('設定')
-    tap('其他資訊')
-    find('原始碼')
-    back()
-    exit_from_home()
-    print('PASS: about dialog -> recorder -> launcher')
-
-    tap('錄音列表')
-    tap('更多選項')
-    tap('搜尋')
-    back()
-    # IME can consume Back while it is visible; close it separately before testing page Back.
+if __name__ == "__main__":
     try:
-        find('開始錄音', timeout=5)
-    except AssertionError:
+        launch()
+        if args.dialogs_only:
+            check_dialogs()
+            raise SystemExit(0)
+        tap('雲端備份與更新')
+        find('我的雲端硬碟 / 課程錄音\n備份完成後，本地原始資料仍會保留。')
         back()
-    exit_from_home()
-    print('PASS: nested search -> recorder -> launcher')
+        exit_from_home()
+        print('PASS: cloud page -> recorder -> launcher')
 
-    tap('錄音列表')
-    tap('回收桶')
-    back()
-    exit_from_home()
-    print('PASS: nested recycle bin -> recorder -> launcher')
+        tap('更多選項')
+        tap('設定')
+        find('錄音品質')
+        back()
+        exit_from_home()
+        print('PASS: settings -> recorder -> launcher')
 
-    tap('錄音列表')
-    tap('更多選項')
-    tap('分類')
-    back()
-    exit_from_home()
-    print('PASS: nested categories -> recorder -> launcher')
+        tap('更多選項')
+        tap('設定')
+        tap('其他資訊')
+        find('原始碼')
+        back()
+        exit_from_home()
+        print('PASS: about dialog -> recorder -> launcher')
 
-    tap('雲端備份與更新')
-    tap('重新授權 Google Drive')
-    find('連結 Google 帳號與雲端備份')
-    back()
-    exit_from_home()
-    print('PASS: account Activity -> recorder -> launcher')
+        tap('錄音列表')
+        tap('更多選項')
+        tap('搜尋')
+        back()
+        # IME can consume Back while it is visible; close it separately before testing page Back.
+        try:
+            find('開始錄音', timeout=5)
+        except AssertionError:
+            back()
+        exit_from_home()
+        print('PASS: nested search -> recorder -> launcher')
 
-    # Toolbar Back must also clear nested navigation.
-    tap('錄音列表')
-    tap('更多選項')
-    tap('分類')
-    tap('返回')
-    exit_from_home()
-    print('PASS: nested toolbar Back -> recorder -> launcher')
+        tap('錄音列表')
+        tap('回收桶')
+        back()
+        exit_from_home()
+        print('PASS: nested recycle bin -> recorder -> launcher')
 
-    open_test_recording()
-    find('上一幀')
-    back()
-    exit_from_home()
-    print('PASS: player -> recorder -> launcher')
+        tap('錄音列表')
+        tap('更多選項')
+        tap('分類')
+        back()
+        exit_from_home()
+        print('PASS: nested categories -> recorder -> launcher')
 
-    open_test_recording()
-    tap('編輯')
-    back()
-    exit_from_home()
-    print('PASS: editor without unsaved edits -> recorder -> launcher')
+        tap('雲端備份與更新')
+        tap('重新授權 Google Drive')
+        find('連結 Google 帳號與雲端備份')
+        back()
+        exit_from_home()
+        print('PASS: account Activity -> recorder -> launcher')
 
-    open_test_recording(long_press=True)
-    find('取消選取')
-    back()
-    exit_from_home()
-    print('PASS: selected recording -> recorder -> launcher')
-    check_dialogs()
-finally:
-    run('shell', 'input', 'keyevent', 'KEYCODE_HOME')
-    run('shell', 'rm', '-f', xml_path)
+        # Toolbar Back must also clear nested navigation.
+        tap('錄音列表')
+        tap('更多選項')
+        tap('分類')
+        tap('返回')
+        exit_from_home()
+        print('PASS: nested toolbar Back -> recorder -> launcher')
+
+        open_test_recording()
+        find('上一幀')
+        back()
+        exit_from_home()
+        print('PASS: player -> recorder -> launcher')
+
+        open_test_recording()
+        tap('編輯')
+        back()
+        exit_from_home()
+        print('PASS: editor without unsaved edits -> recorder -> launcher')
+
+        open_test_recording(long_press=True)
+        find('取消選取')
+        back()
+        exit_from_home()
+        print('PASS: selected recording -> recorder -> launcher')
+        check_dialogs()
+        open_test_recording()
+        tap('本地識別')
+        find('Whisper 本地語音識別')
+        back()
+        exit_from_home()
+        print('PASS: Whisper dialog -> recorder -> launcher')
+    finally:
+        run('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+        run('shell', 'rm', '-f', xml_path)

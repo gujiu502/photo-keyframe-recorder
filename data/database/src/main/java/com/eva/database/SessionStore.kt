@@ -20,13 +20,20 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
     val dao get() = database.sessionDao()
     val activeId = MutableStateFlow<String?>(null)
     val namingRequested = MutableStateFlow(false)
+    val transcribing = MutableStateFlow(false)
     @Volatile var position: () -> Long = { 0L }
+    suspend fun startTranscription() = database.withTransaction {
+        check(activeId.value == null) { "請先停止錄音，再使用本地識別" }
+        check(!transcribing.value) { "已有本地識別正在進行" }
+        transcribing.value = true
+    }
     private val root get() = File(context.filesDir, "keyframes").apply { mkdirs() }
 
     suspend fun start(requireAccount: Boolean = true): String = database.withTransaction {
         check(!AccountSettings(context).prefs.getBoolean("install_committed", false)) { "正在安裝更新，請稍後開始錄音" }
         if (requireAccount) check(AccountSettings(context).recordingAllowed) { "請先完成 Google 帳號與 Drive 設定，或完成必要更新" }
         check(activeId.value == null) { "已有錄音正在進行" }
+        check(!transcribing.value) { "請先停止本地語音識別，再開始錄音" }
         val id = UUID.randomUUID().toString()
         dao.insertSession(RecordingSessionEntity(id, System.currentTimeMillis(), accountId = AccountSettings(context).accountId))
         activeId.value = id
@@ -106,7 +113,10 @@ class SessionStore @Inject constructor(@ApplicationContext private val context: 
         dao.deleteSession(id)
         if (activeId.value == id) activeId.value = null
     }
-    suspend fun deleteRecording(id: Long) { for (session in dao.forRecording(id)) discard(session.sessionId) }
+    suspend fun deleteRecording(id: Long) = database.withTransaction {
+        for (session in dao.forRecording(id)) discard(session.sessionId)
+        withContext(Dispatchers.IO) { android.util.AtomicFile(File(context.filesDir, "transcripts/$id.txt")).delete() }
+    }
 	 suspend fun remapRecording(oldId: Long, newId: Long) = database.withTransaction {
 		val metadata = database.recordingMetaData().getRecordingMetaDataFromId(oldId)
 			?: com.eva.database.entity.RecordingsMetaDataEntity(oldId)

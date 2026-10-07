@@ -32,6 +32,12 @@ class KeyframePersistenceTest {
                 assertNotNull(db.sessionDao().session(session))
             }
             store.activeId.value = null
+            store.transcribing.value = true
+            assertTrue(runCatching { store.start(requireAccount = false) }.isFailure)
+            store.transcribing.value = false
+            store.startTranscription()
+            assertTrue(store.transcribing.value)
+            store.transcribing.value = false
             prefs.edit().putBoolean("install_committed", true).commit()
             assertTrue(runCatching { store.start(requireAccount = false) }.isFailure)
         } finally { prefs.edit().remove("install_committed").commit(); db.close() }
@@ -65,11 +71,16 @@ class KeyframePersistenceTest {
             assertTrue(items.all { File(it.mediaPath!!).isFile })
             val audio = File(context.filesDir, "temp_recordings/test-$session.m4a").apply { parentFile!!.mkdirs(); writeBytes(byteArrayOf(1, 2, 3)) }
             store.dao.audio(session, audio.absolutePath, "audio/mp4")
+            val transcript = File(context.filesDir, "keyframes/$session/transcript.txt").apply { writeText("Whisper 文字保留檢查") }
+            store.remapRecording(42, 84)
+            assertTrue(transcript.isFile)
+            store.remapRecording(84, 42)
             val exported = File(context.cacheDir, "test-$session.zip")
             LectureExporter(context, store).export(android.net.Uri.fromFile(exported), android.net.Uri.fromFile(audio), 42)
             java.util.zip.ZipFile(exported).use { zip ->
                 assertNotNull(zip.getEntry("manifest.json"))
                 assertNotNull(zip.getEntry("lecture.md"))
+                assertTrue(zip.getInputStream(zip.getEntry("lecture.md")).bufferedReader().readText().contains("Whisper 文字保留檢查"))
                 val timeline = org.json.JSONObject(zip.getInputStream(zip.getEntry("timeline.json")).bufferedReader().readText())
                 assertEquals(1, timeline.getInt("schemaVersion"))
                 assertEquals(101, timeline.getJSONArray("items").length())
@@ -80,6 +91,7 @@ class KeyframePersistenceTest {
             store.deleteRecording(42)
             assertNull(store.dao.session(session))
             assertFalse(File(context.filesDir, "keyframes/$session").exists())
+            assertFalse(transcript.exists())
             bitmap.recycle()
         } finally { db.close() }
     }
