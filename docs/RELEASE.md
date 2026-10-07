@@ -16,4 +16,6 @@ Tiny 識別可能有誤字，請核對原音訊；記憶體不足時會提示重
 
 14項返回流程通過，包括Whisper視窗：先回錄音主頁，再按返回才退到桌面。
 
+最終 Android14 完整設備流程及 v0.3.1 建置檢查均通過；包含實際相機／ZIP／恢復、14項返回、模型下載、舊錄音識別、TXT／重啟／ZIP和停止識別。詳見 [驗證文檔](https://github.com/gujiu502/photo-keyframe-recorder/blob/main/docs/IMPROVEMENTS.md)。
+
 v0.3.1 修訂：識別文字的讀取、TXT／ZIP 導出、保存及永久刪除使用同一資料庫交易協調，避免讀取 AtomicFile 時影響未完成寫入。並行讀寫／導出與刪除保護、原生識別及停止、舊項目與ZIP介面回歸均通過。
