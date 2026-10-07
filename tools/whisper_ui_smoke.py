@@ -31,21 +31,6 @@ def open_recording():
     ui.run('shell', 'am', 'start', '-n', a.package + '/com.eva.recorderapp.MainActivity', '-a', 'android.intent.action.VIEW', '-d', 'app://com.gujiu502.lectureframe/player/' + str(a.recording_id))
     ui.tap('本地識別')
 
-def save_document():
-    current = ui.nodes()
-    name = next(n.get('text') for n in current if n.get('class') == 'android.widget.EditText')
-    label = next(n.get('text') for n in current if n.get('class') == 'android.widget.Button' and n.get('text') in ('儲存', '保存', 'Save', 'SAVE'))
-    ui.tap(label)
-    time.sleep(1)
-    # Android may ask before replacing an older task-owned export.
-    if any(n.get('text') in ('替換', '取代', 'Replace', 'REPLACE') for n in ui.nodes()):
-        ui.tap(next(n.get('text') for n in ui.nodes() if n.get('text') in ('替換', '取代', 'Replace', 'REPLACE')))
-    stem, extension = name.rsplit('.', 1)
-    # DocumentsUI adds a numeric suffix when the same smoke export already exists.
-    pattern = re.compile(re.escape(stem) + r'(?: \(\d+\))?\.' + re.escape(extension))
-    candidates = [n for n in ui.run('shell', 'ls', '-t', '/sdcard/Download').splitlines() if pattern.fullmatch(n)]
-    assert candidates, 'Export was not saved to Downloads'
-    return candidates[0]
 
 try:
     open_recording()
@@ -63,7 +48,7 @@ try:
     ui.find('導出文字')
     print('PASS: prior-recording inference, saved result and Chinese completion UI', flush=True)
     ui.tap('導出文字')
-    name = save_document()
+    name = ui.save_document()
     ui.find('關閉')
     ui.run('pull', '/sdcard/Download/' + name, str(output / 'transcript.txt'))
     text = (output / 'transcript.txt').read_text(encoding='utf-8')
@@ -74,7 +59,7 @@ try:
     ui.find('導出文字')
     print('PASS: TXT export and result survives app restart', flush=True)
     ui.tap('關閉'); ui.tap('導出')
-    name = save_document()
+    name = ui.save_document()
     ui.find('導出')
     ui.run('pull', '/sdcard/Download/' + name, str(output / 'lecture.zip'))
     with zipfile.ZipFile(output / 'lecture.zip') as z:

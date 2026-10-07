@@ -87,6 +87,23 @@ def open_test_recording(long_press=False):
         run('shell', 'input', 'tap', x, y)
 
 
+def save_document():
+    current = nodes()
+    name = next(n.get('text') for n in current if n.get('class') == 'android.widget.EditText')
+    label = next(n.get('text') for n in current if n.get('class') == 'android.widget.Button' and n.get('text') in ('儲存', '保存', 'Save', 'SAVE'))
+    tap(label)
+    time.sleep(1)
+    # Android may ask before replacing an older task-owned export.
+    if any(n.get('text') in ('替換', '取代', 'Replace', 'REPLACE') for n in nodes()):
+        tap(next(n.get('text') for n in nodes() if n.get('text') in ('替換', '取代', 'Replace', 'REPLACE')))
+    stem, extension = name.rsplit('.', 1)
+    # DocumentsUI adds a numeric suffix when the same smoke export already exists.
+    pattern = re.compile(re.escape(stem) + r'(?: \(\d+\))?\.' + re.escape(extension))
+    candidates = [n for n in run('shell', 'ls', '-t', '/sdcard/Download').splitlines() if pattern.fullmatch(n)]
+    assert candidates, 'Export was not saved to Downloads'
+    return candidates[0]
+
+
 def check_dialogs():
     open_test_recording()
     tap('查看關鍵幀照片')
