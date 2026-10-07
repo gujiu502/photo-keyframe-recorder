@@ -2,13 +2,13 @@
 
 录音时拍下板书或 PPT，回放时点照片时间跳到对应音频。Android 10 及以上，数据保存在手机本地。
 
-**[下载 v0.3.0 APK](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.3.0)** · [v0.1.0 离线版](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.1.0) · [所有版本](https://github.com/gujiu502/photo-keyframe-recorder/releases) · [实现与验证说明](docs/IMPLEMENTATION.md)
+**[下载 v0.3.1 APK](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.3.1)** · [v0.1.0 离线版](https://github.com/gujiu502/photo-keyframe-recorder/releases/tag/v0.1.0) · [所有版本](https://github.com/gujiu502/photo-keyframe-recorder/releases) · [实现与验证说明](docs/IMPLEMENTATION.md)
 
-v0.3.0 公开发布为正式版本。首次设置需 Google 登录和 Drive 授权；2026-10-05 项目管理员已确认在 Google Console 发布应用。验证范围和具体设备结果见 docs/IMPROVEMENTS.md。
+v0.3.1 公开发布为正式版本。首次设置需 Google 登录和 Drive 授权；2026-10-05 项目管理员已确认在 Google Console 发布应用。验证范围和具体设备结果见 docs/IMPROVEMENTS.md。
 
 ## 使用
 
-1. v0.3.0 首次使用需接受协议、Google 登录并授权 Drive；然后允许麦克风权限，开始录音。v0.1.0 无需账号。
+1. v0.3.1 首次使用需接受协议、Google 登录并授权 Drive；然后允许麦克风权限，开始录音。v0.1.0 无需账号。
 2. 点「拍照关键帧」，首次使用允许相机权限。快门记录此刻的音频毫秒位置；相机打开时录音继续。
 3. 暂停时也能拍照，照片标在暂停位置。
 4. 停止录音后输入文件名，自动附加 `yyyy-MM-dd_HH-mm-ss` 和音频扩展名；保存后在录音列表打开播放器。
@@ -23,7 +23,7 @@ v0.3.0 公开发布为正式版本。首次设置需 Google 登录和 Drive 授�
 
 v0.1.0 包括持久化会话、毫秒时间轴、CameraX 关键帧、播放器照片与跳转、异常恢复和讲义包导出，无账号或云上传。
 
-v0.3.0 包含版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。正式签名 APK 已通过真实 Google 登录和 Drive 备份；Google Console 的应用发布也已由项目管理员确认。后续配置见 [Google 设置说明](docs/GOOGLE_SETUP.md)。没有广告或分析 SDK。
+v0.3.1 包含版本化用户协议、Google 登录、Drive 自动备份及 Play/Direct 自动更新。Drive 只申请 `drive.file`，数据直接上传到用户的「課程錄音」文件夹；上课时本地录音优先，断网排队，备份完成也保留原件。正式签名 APK 已通过真实 Google 登录和 Drive 备份；Google Console 的应用发布也已由项目管理员确认。后续配置见 [Google 设置说明](docs/GOOGLE_SETUP.md)。没有广告或分析 SDK。
 
 [应用首页](https://gujiu502.github.io/photo-keyframe-recorder/) · [隐私政策](https://gujiu502.github.io/photo-keyframe-recorder/privacy.html) · [使用条款](https://gujiu502.github.io/photo-keyframe-recorder/terms.html)
 

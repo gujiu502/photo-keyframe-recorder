@@ -13,7 +13,7 @@ import java.io.File
 import java.security.MessageDigest
 
 class WhisperTest {
-    @Test fun deletingAudioPreventsTranscriptRecreation() = runBlocking {
+    @Test fun concurrentTranscriptAndDeletionSafety() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val db = com.eva.database.RecorderDataBase.createInMemoryDatabase(context)
         val sessions = com.eva.database.SessionStore(context, db)
@@ -29,6 +29,24 @@ class WhisperTest {
         try {
             store.save(id, "已保存識別文字")
             assertEquals("已保存識別文字", store.read(id))
+            val body = "字".repeat(100000)
+            store.save(id, "00$body")
+            val exported = File(context.cacheDir, "concurrent-transcript-$id.txt")
+            fun valid(text: String) = text.length == body.length + 2 && text.take(2).toIntOrNull() in 0..20 && text.drop(2) == body
+            try {
+                coroutineScope {
+                    val writer = async(Dispatchers.IO) { repeat(20) { store.save(id, "${(it+1).toString().padStart(2, '0')}$body") } }
+                    val readers = List(3) { async(Dispatchers.IO) { repeat(20) { assertTrue(valid(store.read(id))) } } }
+                    val exporter = async(Dispatchers.IO) { repeat(20) {
+                        store.export(id, android.net.Uri.fromFile(exported))
+                        assertTrue(valid(exported.readText()))
+                        val markdown = com.eva.database.LectureExporter(context, sessions).contents(id).markdown
+                        assertTrue(valid(markdown.substringAfter("## Whisper 本地語音識別\n\n").trimEnd()))
+                    } }
+                    writer.await(); readers.forEach { it.await() }; exporter.await()
+                }
+                assertEquals("20$body", store.read(id))
+            } finally { exported.delete() }
             assertEquals(1, context.contentResolver.delete(uri, null, null))
             audioExists = false
             sessions.deleteRecording(id)

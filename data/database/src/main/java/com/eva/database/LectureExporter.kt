@@ -2,6 +2,7 @@ package com.eva.database
 
 import android.content.Context
 import android.net.Uri
+import androidx.room.withTransaction
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,6 +15,7 @@ import javax.inject.Inject
 
 class LectureExporter @Inject constructor(@ApplicationContext private val context: Context, private val sessions: SessionStore) {
     suspend fun contents(recordingId: Long?, sessionId: String? = null, title: String = "講義"): LectureContents = withContext(Dispatchers.IO) {
+        sessions.database.withTransaction {
         val session = sessionId?.let { sessions.dao.session(it) }
             ?: recordingId?.let { sessions.dao.forRecording(it).firstOrNull() }
         val items = session?.let { sessions.dao.items(it.sessionId) } ?: emptyList()
@@ -54,6 +56,7 @@ class LectureExporter @Inject constructor(@ApplicationContext private val contex
         manifest.put("courseName", session?.courseName ?: "未分類").put("startedAt", session?.startedAt)
             .put("durationMs", session?.positionMs).put("mimeType", session?.mimeType)
         LectureContents(manifest, JSONObject().put("schemaVersion", 1).put("items", JSONArray(sorted)), markdown.toString(), photoFiles, audioName, session?.audioPath)
+        }
     }
     suspend fun export(destination: Uri, audio: Uri?, recordingId: Long?, sessionId: String? = null, title: String = "講義") = withContext(Dispatchers.IO) {
         val data = contents(recordingId, sessionId, title)

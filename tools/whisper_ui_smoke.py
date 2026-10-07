@@ -84,6 +84,18 @@ try:
     ui.run('pull', audio, str(output / 'original-after'))
     assert hashlib.sha256((output / 'original-after').read_bytes()).hexdigest() == original_hash
     print('PASS: transcript in ZIP, CRC and unchanged original audio', flush=True)
+    ui.tap('本地識別'); ui.tap('自動語言'); ui.tap('開始識別')
+    ui.find('重新識別這個錄音？'); ui.tap('開始識別')
+    stop = next((n for n in ui.nodes() if n.get('text') == '停止識別' and n.get('enabled') == 'true'), None)
+    if stop is not None:
+        x1, y1, x2, y2 = map(int, re.findall(r'\d+', stop.get('bounds')))
+        ui.run('shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
+        ui.find('已停止，已保存的識別內容仍保留')
+        ui.find('導出文字')
+        print('PASS: Stop button cancels recognition and preserves saved content', flush=True)
+    else:
+        ui.find('識別完成，結果已保存在手機')
+        print('INFO: short file completed before UI Stop; native abort is checked by WhisperTest', flush=True)
 finally:
     ui.run('shell', 'input', 'keyevent', 'KEYCODE_HOME')
     ui.run('shell', 'rm', '-f', ui.xml_path)

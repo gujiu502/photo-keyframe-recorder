@@ -29,12 +29,16 @@ class TranscriptionStore @Inject constructor(@ApplicationContext val context: Co
         else File(context.filesDir, "transcripts/$id.txt")
     }
     suspend fun read(id: Long): String = withContext(Dispatchers.IO) {
+        sessions.database.withTransaction {
         val file = result(id)
         if (file.exists() || File(file.path + ".bak").exists()) AtomicFile(file).openRead().bufferedReader(Charsets.UTF_8).use { it.readText() } else ""
+        }
     }
     suspend fun export(id: Long, uri: Uri) = withContext(Dispatchers.IO) {
+        sessions.database.withTransaction {
         check(result(id).isFile) { "尚無識別結果" }
         requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { out -> AtomicFile(result(id)).openRead().use { it.copyTo(out) } }
+        }
     }
     internal suspend fun save(id: Long, text: String) = sessions.database.withTransaction {
         val audio = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)

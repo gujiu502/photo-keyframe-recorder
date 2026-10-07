@@ -18,8 +18,8 @@ android {
 		applicationId = "com.gujiu502.lectureframe"
 		minSdk = libs.versions.minSdk.get().toInt()
 		targetSdk = libs.versions.compileSdk.get().toInt()
-		versionCode = 4
-		versionName = "0.3.0"
+		versionCode = 5
+		versionName = "0.3.1"
 		ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
 		val webClientId = providers.gradleProperty("GOOGLE_WEB_CLIENT_ID").orElse(providers.environmentVariable("GOOGLE_WEB_CLIENT_ID")).getOrElse("")
 		require(webClientId.isEmpty() || webClientId.matches(Regex("[A-Za-z0-9.-]+\\.apps\\.googleusercontent\\.com")))
