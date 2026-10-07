@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0">
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <application android:label="Whisper 識別測試" android:icon="@drawable/test_icon">
+        <service android:name="com.eva.transcription.ProbeMicrophoneService" android:exported="false" android:foregroundServiceType="microphone" />
         <!-- A launcher/label avoids BlueStacks crashing on an empty library-test package. -->
         <activity android:name="android.app.Activity" android:label="Whisper 識別測試" android:icon="@drawable/test_icon" android:exported="true">
             <intent-filter>
