@@ -181,6 +181,7 @@ if __name__ == "__main__":
 
         open_test_recording()
         tap('編輯')
+        find('編輯音訊')
         back()
         exit_from_home()
         print('PASS: editor without unsaved edits -> recorder -> launcher')
