@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -32,24 +33,27 @@ fun PlayerTrackSlider2(
 	enabled: Boolean = true,
 	interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
+	val currentTrack by rememberUpdatedState(trackData)
+	val currentSeek by rememberUpdatedState(onSeek)
+	val currentSeekEnd by rememberUpdatedState(onSeekEnd)
 	val state = remember {
 		SliderState(
 			value = trackData().playRatio,
 			valueRange = 0f..1f,
-			onValueChangeFinished = onSeekEnd,
+			onValueChangeFinished = { currentSeekEnd() },
 		).also { state ->
 			// on value change will be called only when the value changed completed
 			// via interactions not update
 			state.onValueChange = { value ->
-				val seekAmount = trackData().calculateSeekAmount(value)
-				onSeek(seekAmount)
+				val seekAmount = currentTrack().calculateSeekAmount(value)
+				currentSeek(seekAmount)
 			}
 		}
 	}
 
 	// update the track ratio when changed
 	LaunchedEffect(state) {
-		snapshotFlow { trackData().playRatio }
+		snapshotFlow { currentTrack().playRatio }
 			.onEach { value -> state.value = value }
 			.launchIn(this)
 	}

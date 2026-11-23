@@ -47,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.eva.feature_recordings.util.RecordingsPreviewFakes
 import com.eva.recordings.domain.models.RecordedVoiceModel
 import com.eva.ui.R
@@ -125,12 +126,14 @@ internal fun RecordingCard(
 					text = music.title.ifBlank { music.displayName },
 					style = MaterialTheme.typography.titleMedium,
 					color = MaterialTheme.colorScheme.onSurface,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
 					modifier = Modifier.sharedBoundsWrapper(
 						key = SharedElementTransitionKeys.recordSharedEntryTitle(music.id)
 					)
 				)
 				Text(
-					text = music.durationAsLocaltime.format(LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT),
+					text = "${music.recordedAt.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT)} · ${com.eva.utils.formatElapsed(music.duration)}",
 					style = MaterialTheme.typography.bodyMedium,
 					color = MaterialTheme.colorScheme.onBackground,
 				)
@@ -164,11 +167,6 @@ internal fun RecordingCard(
 						modifier = Modifier.size(20.dp)
 					)
 				}
-				Text(
-					text = music.recordedAt.format(LocalTimeFormats.RECORDING_RECORD_TIME_FORMAT),
-					style = MaterialTheme.typography.bodySmall,
-					color = MaterialTheme.colorScheme.onBackground
-				)
 			}
 		}
 	}

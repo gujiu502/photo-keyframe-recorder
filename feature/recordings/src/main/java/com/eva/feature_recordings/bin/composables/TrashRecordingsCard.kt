@@ -2,6 +2,7 @@ package com.eva.feature_recordings.bin.composables
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -52,9 +53,10 @@ internal fun TrashRecordingsCard(
 		context.getString(R.string.recording_info_expires_at, readableText)
 	}
 
-	ElevatedCard(
+	OutlinedCard(
 		shape = shape,
-		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
+		colors = CardDefaults.outlinedCardColors(containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest),
+		border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
 		modifier = modifier
 			.clip(shape)
 			.clickable(onClick = onClick),
@@ -95,7 +97,7 @@ internal fun TrashRecordingsCard(
 				Text(
 					text = trashRecording.displayName,
 					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.primary
+					color = MaterialTheme.colorScheme.onSurface
 				)
 				Text(
 					text = expiryDateText,

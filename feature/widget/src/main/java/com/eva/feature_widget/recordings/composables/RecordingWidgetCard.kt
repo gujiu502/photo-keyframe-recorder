@@ -79,7 +79,7 @@ internal fun RecordingWidgetCard(
 			)
 			Row(modifier = GlanceModifier.wrapContentHeight()) {
 				Text(
-					text = model.durationAsLocaltime.format(LocalTimeFormats.NOTIFICATION_TIMER_TIME_FORMAT),
+					text = com.eva.utils.formatElapsed(model.duration),
 					style = TextStyle(
 						color = GlanceTheme.colors.onPrimaryContainer,
 						fontWeight = FontWeight.Normal,

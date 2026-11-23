@@ -12,7 +12,7 @@ import com.eva.ui.theme.lightScheme
 
 @Composable
 fun RecorderAppWidgetTheme(
-	dynamicColor: Boolean = true,
+	dynamicColor: Boolean = false,
 	content: @Composable() () -> Unit,
 ) {
 	val context = LocalContext.current

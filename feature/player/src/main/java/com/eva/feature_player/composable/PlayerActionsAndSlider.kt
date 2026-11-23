@@ -2,12 +2,20 @@ package com.eva.feature_player.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -17,7 +25,34 @@ import com.eva.player.domain.model.PlayerMetaData
 import com.eva.player.domain.model.PlayerTrackData
 import com.eva.player_shared.composables.PlayerTrackSlider2
 import com.eva.ui.theme.RecorderAppTheme
+import com.eva.ui.R
 import kotlin.time.Duration.Companion.minutes
+
+@Composable
+internal fun CompactPlayerControls(
+	track: () -> PlayerTrackData,
+	onAction: (PlayerEvents) -> Unit,
+	ready: Boolean,
+	playing: Boolean,
+	onOptions: () -> Unit,
+) {
+	Row(verticalAlignment = Alignment.CenterVertically) {
+		FilledIconButton(
+			enabled = ready,
+			onClick = { onAction(if (playing) PlayerEvents.OnPausePlayer else PlayerEvents.OnStartPlayer) },
+		) {
+			Icon(painterResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play), if (playing) "暫停" else "播放")
+		}
+		PlayerTrackSlider2(
+			trackData = track,
+			onSeek = { onAction(PlayerEvents.OnSeekingPlayer(it)) },
+			onSeekEnd = { onAction(PlayerEvents.OnSeekEndPlayer) },
+			modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+			enabled = ready,
+		)
+		IconButton(onClick = onOptions) { Icon(Icons.Default.MoreVert, "播放選項") }
+	}
+}
 
 @Composable
 internal fun PlayerActionsAndSlider(

@@ -1,16 +1,23 @@
 package com.eva.feature_player.composable
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -49,13 +56,15 @@ internal fun AudioPlayerScreenContent(
 		}
 	}
 
-	BoxWithConstraints(modifier.fillMaxSize()) {
-	val compact = maxHeight < 520.dp
-	Column(
-		modifier = Modifier.fillMaxSize(),
-		verticalArrangement = Arrangement.spacedBy(8.dp)
-	) {
-		if (!compact) PlayerDurationText(
+	var showOptions by remember { mutableStateOf(false) }
+	val goHome = com.eva.ui.navigation.LocalNavigateHome.current
+	if (showOptions) ModalBottomSheet(onDismissRequest = { showOptions = false; goHome() }) {
+		Column(
+			Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
+			verticalArrangement = Arrangement.spacedBy(8.dp),
+		) {
+		Text("播放選項", style = MaterialTheme.typography.titleLarge)
+		PlayerDurationText(
 			track = trackData,
 			fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
 			modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -66,7 +75,7 @@ internal fun AudioPlayerScreenContent(
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 		) {
-			if (!compact) PlayerAmplitudeGraph2(
+			PlayerAmplitudeGraph2(
 				trackData = trackData,
 				bookMarksTimeStamps = bookMarkTimeStamps,
 				graphData = waveforms,
@@ -84,21 +93,24 @@ internal fun AudioPlayerScreenContent(
 				modifier = Modifier.fillMaxWidth()
 			)
 		}
-		com.eva.feature_player.keyframe.PlayerKeyframes(
-            id = fileModel.id, audioUri = fileModel.fileUri, title = fileModel.title,
-            currentPosition = { trackData().current.inWholeMilliseconds },
-            onSeek = { onPlayerEvents(PlayerEvents.PlayFromPosition(it)) },
-            modifier = Modifier.fillMaxWidth().weight(1f),
-        )
 		PlayerActionsAndSlider(
 			metaData = playerMetaData,
 			trackData = trackData,
 			isPlayerPlaying = isPlayerPlaying,
 			isControllerSet = isControllerReady,
 			onPlayerAction = onPlayerEvents,
-			modifier = Modifier
-				.fillMaxWidth(),
+			modifier = Modifier.fillMaxWidth(),
 		)
+		}
 	}
+	com.eva.feature_player.keyframe.PlayerKeyframes(
+		id = fileModel.id,
+		audioUri = fileModel.fileUri,
+		title = fileModel.title,
+		currentPosition = { trackData().current.inWholeMilliseconds },
+		onSeek = { onPlayerEvents(PlayerEvents.PlayFromPosition(it)) },
+		modifier = modifier.fillMaxSize(),
+	) {
+		CompactPlayerControls(trackData, onPlayerEvents, isControllerReady, isPlayerPlaying) { showOptions = true }
 	}
 }

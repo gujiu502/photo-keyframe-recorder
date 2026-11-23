@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,6 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.eva.ui.theme.JournalPanel
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import com.eva.cloud.*
@@ -29,7 +34,7 @@ fun AccountGate(activity: ComponentActivity, backup: DriveBackup, db: RecorderDa
     val scope = rememberCoroutineScope()
     var accepted by remember { mutableStateOf(settings.agreementAccepted) }
     var checked by remember { mutableStateOf(false) }
-    var identity by remember { mutableStateOf(settings.accountId?.let { it to requireNotNull(settings.email) }) }
+    var identity by remember { mutableStateOf(settings.accountId?.let { id -> settings.email?.let { id to it } }) }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     fun finishAuthorization(token: String?) {
@@ -59,8 +64,8 @@ fun AccountGate(activity: ComponentActivity, backup: DriveBackup, db: RecorderDa
         check(!db.sessionDao().recordingBusy()) { "錄音結束後才能切換 Google 帳號" }
         check(db.cloudDao().all().none { it.accountId != selected.first && it.state !in setOf("COMPLETE", "DELETED") }) { "原帳號仍有待備份課程，請先完成或處理備份再切換帳號" }
         val changed = settings.accountId != selected.first
-        settings.prefs.edit().putString("account_id", selected.first).putString("email", selected.second)
-            .apply { if (changed) putBoolean("drive_authorized", false) }.commit()
+        check(settings.prefs.edit().putString("account_id", selected.first).putString("email", selected.second)
+            .apply { if (changed) putBoolean("drive_authorized", false) }.commit()) { "無法儲存帳號資料" }
         }
         identity = selected
     }
@@ -73,21 +78,28 @@ fun AccountGate(activity: ComponentActivity, backup: DriveBackup, db: RecorderDa
     }
     Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("照片關鍵幀錄音", style = MaterialTheme.typography.headlineMedium)
+        Image(
+            painter = painterResource(com.eva.ui.R.drawable.journal_classroom_banner),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxWidth().height(128.dp).clip(MaterialTheme.shapes.large),
+        )
         if (!accepted) {
-            Text("使用者協議與雲端備份／自動更新授權", style = MaterialTheme.typography.titleLarge)
-            Text(AGREEMENT)
+            JournalPanel("權限與使用條款") { Text(AGREEMENT, style = MaterialTheme.typography.bodyMedium) }
             Row { Checkbox(checked, { checked = it }, Modifier.semantics { contentDescription = "我已閱讀並同意使用者協議" }); Text("我已閱讀並同意使用者協議", Modifier.padding(top = 12.dp)) }
-            Button(onClick = { settings.acceptAgreement(); accepted = true; enqueueUpdate(activity) }, enabled = checked) { Text("同意並繼續") }
+            Button(onClick = { settings.acceptAgreement(); accepted = true; enqueueUpdate(activity) }, enabled = checked,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("同意並繼續") }
         } else {
-            Text("連結 Google 帳號與雲端備份", style = MaterialTheme.typography.titleLarge)
-            Text("錄音、照片、時間軸與筆記會自動備份到：\n我的雲端硬碟 / 課程錄音\n\n首次設定完成後，沒有網路也可以錄音。")
-            identity?.let { Text("Google 帳號：${it.second}") }
+            JournalPanel("連結 Google 帳號與雲端備份") {
+                Text("錄音、照片、時間軸與筆記會自動備份到：\n我的雲端硬碟 / 課程錄音\n\n首次設定完成後，沒有網路也可以錄音。")
+                identity?.let { Text("Google 帳號：${it.second}") }
+            }
             if (identity != null) TextButton(enabled = !busy, onClick = { identity = null }) { Text("選擇其他 Google 帳號") }
-            if (identity == null) OutlinedButton(enabled = !busy, onClick = {
+            if (identity == null) Button(enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), onClick = {
                 scope.launch { busy = true; error = null; try { login(false) } catch (e: CancellationException) { throw e }
                     catch (e: Exception) { error = if (BuildConfig.GOOGLE_WEB_CLIENT_ID.isBlank()) "開發者尚未配置 Google 登入" else "Google 登入未完成，請檢查網路與 Google 帳號；切換帳號前須先處理原帳號待備份課程" } finally { busy = false } }
             }) { Text("使用 Google 帳號登入") }
-            else Button(enabled = !busy, onClick = {
+            else Button(enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), onClick = {
                 scope.launch {
                     busy = true; error = null
                     try {
@@ -101,7 +113,7 @@ fun AccountGate(activity: ComponentActivity, backup: DriveBackup, db: RecorderDa
         }
         if (busy) CircularProgressIndicator()
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        onLocalData?.let { TextButton(onClick = it) { Text("查看／導出既有本地資料") } }
+        onLocalData?.let { OutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("查看／導出既有本地資料") } }
         Text("協議版本 ${AccountSettings.AGREEMENT_VERSION}", style = MaterialTheme.typography.labelSmall)
     }
 }

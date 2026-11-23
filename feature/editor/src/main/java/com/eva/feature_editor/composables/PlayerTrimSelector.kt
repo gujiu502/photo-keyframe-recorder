@@ -32,8 +32,8 @@ internal fun PlayerTrimSelector(
 	enabled: Boolean = true,
 	maxGraphPoints: Int = RecorderConstants.RECORDER_AMPLITUDES_BUFFER_SIZE,
 	shape: Shape = MaterialTheme.shapes.large,
-	overlayColor: Color = MaterialTheme.colorScheme.tertiary,
-	containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+	overlayColor: Color = com.eva.ui.theme.JournalConsoleAccent,
+	containerColor: Color = com.eva.ui.theme.JournalConsole,
 	contentPadding: PaddingValues = PaddingValues(28.dp),
 ) {
 	val totalTrackDuration by remember { derivedStateOf { trackData().total } }
@@ -49,6 +49,11 @@ internal fun PlayerTrimSelector(
 			maxGraphPoints = maxGraphPoints,
 			graphData = graphData,
 			timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
+			plotColor = com.eva.ui.theme.JournalConsoleInk,
+			trackPointerColor = com.eva.ui.theme.JournalConsoleAccent,
+			timelineTextColor = com.eva.ui.theme.JournalConsoleInk,
+			timelineColor = com.eva.ui.theme.JournalConsoleInk.copy(alpha = .55f),
+			timelineColorVariant = com.eva.ui.theme.JournalConsoleInk.copy(alpha = .25f),
 			modifier = Modifier
 				.padding(contentPadding)
 				.trimOverlay(

@@ -1,6 +1,7 @@
 package com.eva.feature_settings.composables
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -59,10 +60,11 @@ internal fun SettingsItemWithSwitch(
 		leadingContent = leading,
 		modifier = modifier
 			.clip(shape = MaterialTheme.shapes.medium)
-			.clickable { onSelect(!isSelected) },
+			.border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+			.clickable(enabled = enabled) { onSelect(!isSelected) },
 		tonalElevation = tonalElevation,
 		shadowElevation = shadowElevation,
-		colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+		colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
 	)
 }
 

@@ -72,16 +72,16 @@ internal fun RecorderContent(
 					verticalArrangement = Arrangement.spacedBy(6.dp),
 					modifier = Modifier.fillMaxWidth().padding(14.dp),
 				) {
-					Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+					Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 						androidx.compose.foundation.layout.Spacer(Modifier.size(10.dp).background(accent, CircleShape))
-						Text(status, style = MaterialTheme.typography.titleSmall)
+						Text(status, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+						RecorderTimerText(
+							time = timer,
+							color = light,
+							style = MaterialTheme.typography.headlineSmall,
+							fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+						)
 					}
-					RecorderTimerText(
-						time = timer,
-						color = light,
-						fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-						modifier = Modifier.align(Alignment.CenterHorizontally),
-					)
 					RecorderAmplitudeGraph(
 						recoderPointsCallback = recordingPointsCallback,
 						bookMarksDeferred = bookMarksDeferred,

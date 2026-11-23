@@ -106,10 +106,14 @@ class DriveBackup @Inject constructor(@ApplicationContext private val context: C
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS).build())
     }
-    suspend fun retry(id: String) {
-        val row = dao.backup(id) ?: return
+    suspend fun retry(id: String) = remoteLock.withLock {
+        val row = dao.backup(id) ?: return@withLock
         check(row.accountId == settings.accountId) { "請登入這堂課綁定的原 Google 帳號" }
-        if (row.state.startsWith("DELETE_")) { enqueueDeletion(row.copy(state = "DELETE_QUEUED", errorCode = null)); return }
+        if (row.state == "DELETED" || row.state == "COMPLETE") return@withLock
+        if (row.state.startsWith("DELETE_")) {
+            enqueueDeletion(row.copy(state = "DELETE_QUEUED", errorCode = null))
+            return@withLock
+        }
         dao.put(row.copy(state = "QUEUED", errorCode = null)); enqueue(id)
     }
     private fun open(path: String) = if (path.startsWith("content:")) requireNotNull(context.contentResolver.openInputStream(Uri.parse(path))) else File(path).inputStream()

@@ -107,6 +107,8 @@ class DriveProtocolTest {
                 .putBoolean("drive_authorized", true).commit()
             try {
                 db.cloudDao().put(restoredBackup.copy(state = "DELETED"))
+                backup.retry("session")
+                assertEquals("DELETED", db.cloudDao().backup("session")!!.state)
                 backup.reconcile()
                 backup.checkCompleted(client, "account", repairs::add)
                 backup.upload("session") // even a previously queued upload respects the tombstone

@@ -5,12 +5,19 @@ import com.eva.ui.navigation.LocalNavigateHome
 import com.eva.ui.navigation.RecordingNavigation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -164,6 +171,15 @@ internal fun RecordingsScreen(
 			onLoadRecordings = { onScreenEvent(RecordingScreenEvent.PopulateRecordings) },
 			modifier = Modifier.padding(scPadding)
 		) {
+			Column(Modifier.fillMaxSize()) {
+			if (!isAnySelected) OutlinedButton(
+				onClick = onNavigateToSearch,
+				shape = MaterialTheme.shapes.large,
+				modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).heightIn(min = 48.dp),
+			) {
+				Icon(Icons.Default.Search, null)
+				Text("搜尋錄音", Modifier.weight(1f).padding(start = 8.dp))
+			}
 			RecordingsInteractiveList(
 				isRecordingsLoaded = isRecordingsLoaded,
 				selectedCategory = selectedCategory,
@@ -180,8 +196,9 @@ internal fun RecordingsScreen(
 					horizontal = dimensionResource(id = R.dimen.sc_padding),
 					vertical = dimensionResource(id = R.dimen.sc_padding_secondary)
 				),
-				modifier = Modifier.fillMaxSize(),
+				modifier = Modifier.weight(1f).fillMaxWidth(),
 			)
+			}
 		}
 	}
 }

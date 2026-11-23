@@ -178,17 +178,17 @@ private fun KeyframeCamera(timer: () -> String, busy: Boolean, vm: KeyframeViewM
         onDispose { disposed = true; previewView.previewStreamState.removeObserver(observer); provider?.unbind(preview, capture) }
     }
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Surface(Modifier.fillMaxSize()) {
+        Surface(Modifier.fillMaxSize(), color = com.eva.ui.theme.JournalConsole, contentColor = com.eva.ui.theme.JournalConsoleInk) {
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    IconButton(onClick = dismiss, enabled = !busy) { Icon(Icons.Default.Close, "返回錄音") }
+                    IconButton(onClick = dismiss, enabled = !busy) { Icon(Icons.Default.Close, "返回錄音", tint = com.eva.ui.theme.JournalConsoleInk) }
                     if (hasFlash) IconButton(onClick = { flash = !flash; capture.flashMode = if (flash) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF }) {
-                        Icon(Icons.Default.FlashOn, if (flash) "關閉閃光燈" else "开啟閃光燈")
+                        Icon(Icons.Default.FlashOn, if (flash) "關閉閃光燈" else "開啟閃光燈", tint = com.eva.ui.theme.JournalConsoleInk)
                     }
                 }
                 AndroidView(factory = { previewView }, modifier = Modifier.fillMaxWidth().weight(1f))
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
-                Text("錄音進行中 / 暫停時保留位置 · ${timer()}", modifier = Modifier.padding(16.dp))
+                Text(timer(), modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp), style = MaterialTheme.typography.titleMedium)
                 Button(onClick = {
                     capture.targetRotation = previewView.display?.rotation ?: 0
                     vm.capture(takePicture = { file, result ->
@@ -198,7 +198,10 @@ private fun KeyframeCamera(timer: () -> String, busy: Boolean, vm: KeyframeViewM
                                 override fun onError(exception: ImageCaptureException) { result(false) }
                             })
                     }, onDone = dismiss)
-                }, enabled = ready && !busy, modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp).height(56.dp)) {
+                }, enabled = ready && !busy, modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp).heightIn(min = 56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = com.eva.ui.theme.JournalConsoleInk,
+                        contentColor = com.eva.ui.theme.JournalConsole)) {
+                    Icon(Icons.Default.CameraAlt, null, Modifier.padding(end = 8.dp))
                     Text(if (busy) "正在保存…" else "拍照")
                 }
             }

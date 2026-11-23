@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -85,9 +89,7 @@ internal fun AudioEditorScreen(
 	val snackBarHostProvider = LocalSnackBarProvider.current
 	val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-	val isBackHandlerEnabled by rememberSaveable(undoRedoState.holdHistory) {
-		mutableStateOf(undoRedoState.holdHistory)
-	}
+	val isBackHandlerEnabled = undoRedoState.holdHistory
 	var showDialog by remember { mutableStateOf(false) }
 
 	var showSheet by remember { mutableStateOf(false) }
@@ -143,6 +145,11 @@ internal fun AudioEditorScreen(
 		ContentStateAnimatedContainer(
 			loadState = loadState,
 			onSuccess = { model ->
+				Column(
+					modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+					verticalArrangement = Arrangement.spacedBy(12.dp),
+				) {
+				Text(model.title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
 				PlayerDurationText(
 					track = {
 						val track = trackData()
@@ -150,13 +157,11 @@ internal fun AudioEditorScreen(
 						else PlayerTrackData(Duration.ZERO, model.duration)
 					},
 					fontFamily = DownloadableFonts.SPLINE_SANS_MONO_FONT_FAMILY,
-					modifier = Modifier.align(Alignment.TopCenter)
+					modifier = Modifier.align(Alignment.CenterHorizontally)
 				)
 				Column(
 					modifier = Modifier
-						.fillMaxWidth()
-						.align(Alignment.Center)
-						.offset(y = (-80).dp),
+						.fillMaxWidth(),
 					horizontalAlignment = Alignment.CenterHorizontally,
 					verticalArrangement = Arrangement.spacedBy(12.dp),
 				) {
@@ -182,14 +187,6 @@ internal fun AudioEditorScreen(
 						trackDuration = totalTrackDuration
 					)
 				}
-				Box(
-					modifier = Modifier
-						.heightIn(min = 180.dp)
-						.fillMaxWidth()
-						.align(Alignment.BottomCenter)
-						.offset(y = (-20).dp),
-					contentAlignment = Alignment.Center
-				) {
 					EditorActionsAndControls(
 						trackData = trackData,
 						isMediaPlaying = isPlaying,

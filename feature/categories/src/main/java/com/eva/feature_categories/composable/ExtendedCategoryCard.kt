@@ -29,6 +29,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.dimensionResource
@@ -57,7 +59,7 @@ internal fun ExtendedCategoryCard(
 	onDelete: () -> Unit,
 	modifier: Modifier = Modifier,
 	shape: Shape = MaterialTheme.shapes.large,
-	colors: CardColors = CardDefaults.elevatedCardColors(),
+	colors: CardColors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
 ) {
 	var showDropDown by remember { mutableStateOf(false) }
 	var showDeleteDialog by remember { mutableStateOf(false) }
@@ -72,13 +74,10 @@ internal fun ExtendedCategoryCard(
 		onCancel = { showDeleteDialog = false },
 	)
 
-	ElevatedCard(
+	OutlinedCard(
 		colors = colors,
 		shape = shape,
-		elevation = CardDefaults.cardElevation(
-			pressedElevation = 4.dp,
-			defaultElevation = 0.dp
-		),
+		border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
 		modifier = modifier
 			.semantics { role = Role.RadioButton }
 			.sharedBoundsWrapper(

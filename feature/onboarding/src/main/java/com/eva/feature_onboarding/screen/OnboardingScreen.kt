@@ -45,7 +45,7 @@ internal fun OnboardingScreen(
 		derivedStateOf {
 			val current = pagerState.currentPage
 			val count = pagerState.pageCount
-			(current.toFloat() / count).coerceIn(0f..1f)
+					((current + 1).toFloat() / count).coerceIn(0f..1f)
 		}
 	}
 
@@ -64,7 +64,7 @@ internal fun OnboardingScreen(
 	Scaffold(
 		topBar = {
 			TopAppBar(
-				title = {},
+				title = { Text("照片關鍵幀錄音", style = MaterialTheme.typography.titleMedium) },
 				actions = {
 					TextButton(onClick = onContinueToApp) {
 						Text(

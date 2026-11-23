@@ -31,6 +31,7 @@ jobs:
           target: google_apis
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated
           script: |
+            ./gradlew :feature:player-shared:testDebugUnitTest
             ./gradlew :data:database:connectedDebugAndroidTest :data:cloud:connectedDebugAndroidTest :app:assembleDirectDebug :app:assembleDirectDebugAndroidTest :app:installDirectDebug
             mkdir -p work
             ./gradlew :data:transcription:assembleDebugAndroidTest

@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,10 +41,10 @@ internal fun WelcomePage(
 		verticalArrangement = Arrangement.Center
 	) {
 		Image(
-			painter = painterResource(R.drawable.ic_microphone),
-			colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary),
-			contentDescription = "應用程式圖示",
-			modifier = Modifier.size(128.dp),
+			painter = painterResource(R.drawable.journal_classroom_banner),
+			contentDescription = null,
+			contentScale = ContentScale.Crop,
+			modifier = Modifier.fillMaxWidth().height(144.dp).clip(MaterialTheme.shapes.large),
 		)
 		Spacer(modifier = Modifier.height(12.dp))
 		Text(

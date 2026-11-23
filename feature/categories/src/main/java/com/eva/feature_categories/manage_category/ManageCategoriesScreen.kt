@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,9 +55,8 @@ internal fun ManageCategoriesScreen(
 			MediumTopAppBar(
 				title = { Text(text = stringResource(id = R.string.manage_categories_top_bar_title)) },
 				actions = {
-					TextButton(
+					Button(
 						onClick = onNavigateToCreateCategory,
-						colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
 						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.categoryCardSharedBoundsTransition())
 					) {
 						Text(text = stringResource(R.string.menu_option_create))

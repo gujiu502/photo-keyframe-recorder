@@ -40,7 +40,7 @@ fun FileMetaDataSheetContent(
 	}
 
 	val durationText = remember(audio.duration) {
-		audio.durationAsLocaltime.format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT)
+		com.eva.utils.formatElapsed(audio.duration)
 	}
 
 	val lastModified = remember(audio.lastModified) {

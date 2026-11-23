@@ -80,7 +80,7 @@ internal fun TranscriptionTools(id: Long, audioUri: String, title: String, vm: T
                 .putExtra("recording_id", id).putExtra("audio_uri", audioUri).putExtra("language", language))
         } catch (e: Exception) { Toast.makeText(context, "無法開始識別：${e.localizedMessage ?: "請重試"}", Toast.LENGTH_LONG).show() }
     }
-    TextButton(onClick = {
+    OutlinedButton(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = MaterialTheme.shapes.medium, onClick = {
         if (status.running && status.recordingId == id) cloud = status.cloud
         expanded = true
     }) { Text("語音識別") }
@@ -152,7 +152,7 @@ internal fun TranscriptionTools(id: Long, audioUri: String, title: String, vm: T
         var key by remember { mutableStateOf("") }
         var error by remember { mutableStateOf<String?>(null) }
         AlertDialog(
-            onDismissRequest = { if (!vm.savingKey) showKey = false },
+            onDismissRequest = { if (!vm.savingKey) { showKey = false; goHome() } },
             title = { Text("NVIDIA API 金鑰") },
             text = {
                 Column {

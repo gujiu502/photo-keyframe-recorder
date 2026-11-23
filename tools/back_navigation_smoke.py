@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import time
+from pathlib import Path
 import xml.etree.ElementTree as ET
 
 parser = argparse.ArgumentParser()
@@ -51,6 +52,13 @@ def tap(label):
 def back():
     run('shell', 'input', 'keyevent', 'KEYCODE_BACK')
     time.sleep(.4)
+
+
+def capture(name):
+    folder = Path("work") / ("ui-smoke-" + args.package) / "pages"
+    folder.mkdir(parents=True, exist_ok=True)
+    with (folder / f"{name}.png").open("wb") as image:
+        subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=image, check=True)
 
 
 def home():
@@ -128,7 +136,8 @@ if __name__ == "__main__":
             check_dialogs()
             raise SystemExit(0)
         tap('雲端備份與更新')
-        find('我的雲端硬碟 / 課程錄音\n備份完成後，本地原始資料仍會保留。')
+        find('我的雲端硬碟 / 課程錄音')
+        capture('cloud')
         back()
         exit_from_home()
         print('PASS: cloud page -> recorder -> launcher')
@@ -136,6 +145,7 @@ if __name__ == "__main__":
         tap('更多選項')
         tap('設定')
         find('錄音品質')
+        capture('settings')
         back()
         exit_from_home()
         print('PASS: settings -> recorder -> launcher')
@@ -144,6 +154,7 @@ if __name__ == "__main__":
         tap('設定')
         tap('其他資訊')
         find('原始碼')
+        capture('about')
         back()
         exit_from_home()
         print('PASS: about dialog -> recorder -> launcher')
@@ -151,6 +162,7 @@ if __name__ == "__main__":
         tap('錄音列表')
         tap('更多選項')
         tap('搜尋')
+        capture('search')
         back()
         # IME can consume Back while it is visible; close it separately before testing page Back.
         try:
@@ -162,6 +174,7 @@ if __name__ == "__main__":
 
         tap('錄音列表')
         tap('回收桶')
+        capture('trash')
         back()
         exit_from_home()
         print('PASS: nested recycle bin -> recorder -> launcher')
@@ -170,6 +183,7 @@ if __name__ == "__main__":
         tap('更多選項')
         tap('分類')
         find('管理分類')
+        capture('categories')
         back()
         exit_from_home()
         print('PASS: nested categories -> recorder -> launcher')
@@ -177,6 +191,7 @@ if __name__ == "__main__":
         tap('雲端備份與更新')
         tap('重新授權 Google Drive')
         find('連結 Google 帳號與雲端備份')
+        capture('account')
         back()
         exit_from_home()
         print('PASS: account Activity -> recorder -> launcher')
@@ -199,6 +214,7 @@ if __name__ == "__main__":
         open_test_recording()
         tap('編輯')
         find('編輯音訊')
+        capture('editor')
         back()
         exit_from_home()
         print('PASS: editor without unsaved edits -> recorder -> launcher')
@@ -212,9 +228,18 @@ if __name__ == "__main__":
         open_test_recording()
         tap('語音識別')
         find('錄音轉文字')
+        capture('recognition')
         back()
         exit_from_home()
         print('PASS: Whisper dialog -> recorder -> launcher')
+        open_test_recording()
+        tap('語音識別')
+        tap('設定 NVIDIA 金鑰')
+        find('NVIDIA API 金鑰')
+        capture('nvidia-key')
+        back()
+        exit_from_home()
+        print('PASS: NVIDIA key dialog -> recorder -> launcher')
     finally:
         run('shell', 'input', 'keyevent', 'KEYCODE_HOME')
         run('shell', 'rm', '-f', xml_path)

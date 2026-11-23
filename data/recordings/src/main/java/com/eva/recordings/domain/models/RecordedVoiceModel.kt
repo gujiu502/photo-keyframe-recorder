@@ -1,7 +1,6 @@
 package com.eva.recordings.domain.models
 
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -18,7 +17,4 @@ data class RecordedVoiceModel(
 	val isFavorite: Boolean = false,
 	val categoryId: Long? = null,
 	val owner: String? = null,
-) {
-	val durationAsLocaltime: LocalTime
-		get() = LocalTime.fromSecondOfDay(duration.inWholeSeconds.toInt())
-}
+)

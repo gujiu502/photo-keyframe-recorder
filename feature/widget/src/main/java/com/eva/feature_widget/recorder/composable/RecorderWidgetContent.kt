@@ -4,6 +4,9 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.unit.ColorProvider
+import com.eva.ui.theme.JournalConsole
+import com.eva.ui.theme.JournalConsoleInk
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceComposable
 import androidx.glance.GlanceModifier
@@ -44,9 +47,8 @@ internal fun RecorderWidgetContent(
 ) {
 	val context = LocalContext.current
 
-	val background = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-		GlanceTheme.colors.widgetBackground
-	else GlanceTheme.colors.background
+	val background = ColorProvider(JournalConsole)
+	val ink = ColorProvider(JournalConsoleInk)
 
 	Scaffold(
 		backgroundColor = background,
@@ -81,11 +83,11 @@ internal fun RecorderWidgetContent(
 				horizontalAlignment = Alignment.Start
 			) {
 				Text(
-					text = model.time.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS),
+					text = model.time.format(LocalTimeFormats.LOCALTIME_HH_MM_SS_FORMAT),
 					style = TextStyle(
-						color = GlanceTheme.colors.onBackground,
+						color = ink,
 						fontWeight = FontWeight.Medium,
-						fontSize = 18.sp
+						fontSize = 23.sp
 					)
 				)
 				Spacer(modifier = GlanceModifier.height(4.dp))
@@ -100,7 +102,7 @@ internal fun RecorderWidgetContent(
 					Text(
 						text = it,
 						style = TextStyle(
-							color = GlanceTheme.colors.onSurfaceVariant,
+							color = ink,
 							fontWeight = FontWeight.Normal,
 							fontSize = 14.sp
 						),
