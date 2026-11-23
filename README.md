@@ -49,6 +49,6 @@ v0.3.1 包含版本化用户协议、Google 登录、Drive 自动备份及 Play/
 
 也可選「離線 Whisper」，首次需下載約 74 MiB 的多語言 Tiny 模型。兩種模式都可停止、保留已完成段落和匯出 TXT。辨識與錄音互相避讓，中斷錄製仍可用原始恢復包保留來源檔案。
 
-三個主要畫面的設計參考見 [介面設計圖](screenshots/mp4-ui-reference.png)。
+介面以四組生成設計圖為參考，涵蓋錄音、資料管理、辨識、設定及帳號畫面。見[介面設計與實作範圍](docs/UI_REFERENCE.md)及[代碼審查](docs/CODE_REVIEW.md)。
 
 构建前执行 `git submodule update --init --recursive` 获取固定版本的 whisper.cpp，Android NDK 28.2.13676358 与 CMake 3.22.1 用于编译 ARM64、ARMv7 和 x86_64。本机或 CI 的 Google OAuth／签名配置仍按 `docs/GOOGLE_SETUP.md` 设置。
