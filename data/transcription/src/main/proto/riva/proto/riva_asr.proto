@@ -107,7 +107,7 @@ message StreamingRecognizeRequest {
   }
 
   // Per-chunk runtime configuration passed alongside audio_content messages.
-  // This is an OPTIONAL parameter which should be used when client needs to 
+  // This is an OPTIONAL parameter which should be used when client needs to
   // tune server configuration during an ongoing session.
   // Supported keys:
   //   "force_eou" = "true" : Forces an immediate end-of-utterance for the
