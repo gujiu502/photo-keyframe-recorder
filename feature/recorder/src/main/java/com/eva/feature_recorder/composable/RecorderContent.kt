@@ -66,40 +66,40 @@ internal fun RecorderContent(
 			modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
 			verticalArrangement = Arrangement.spacedBy(8.dp),
 		) {
-		Text("錄音工作台", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-		Surface(color = console, contentColor = light, shape = RoundedCornerShape(22.dp)) {
-		Column(
-			verticalArrangement = Arrangement.spacedBy(6.dp),
-			modifier = Modifier.fillMaxWidth().padding(14.dp),
-		) {
-			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-				androidx.compose.foundation.layout.Spacer(Modifier.size(10.dp).background(accent, CircleShape))
-				Text(status, style = MaterialTheme.typography.titleSmall)
+			Text("錄音工作台", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+			Surface(color = console, contentColor = light, shape = RoundedCornerShape(22.dp)) {
+				Column(
+					verticalArrangement = Arrangement.spacedBy(6.dp),
+					modifier = Modifier.fillMaxWidth().padding(14.dp),
+				) {
+					Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+						androidx.compose.foundation.layout.Spacer(Modifier.size(10.dp).background(accent, CircleShape))
+						Text(status, style = MaterialTheme.typography.titleSmall)
+					}
+					RecorderTimerText(
+						time = timer,
+						color = light,
+						fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+						modifier = Modifier.align(Alignment.CenterHorizontally),
+					)
+					RecorderAmplitudeGraph(
+						recoderPointsCallback = recordingPointsCallback,
+						bookMarksDeferred = bookMarksDeferred,
+						timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
+						containerColor = console,
+						chartColor = accent,
+						bookMarkColor = accent,
+						timelineColor = Color(0xFFB8A8A8),
+						timelineColorVariant = Color(0xFF544951),
+						timelineTextColor = light,
+						contentPadding = PaddingValues(horizontal = 6.dp),
+						modifier = Modifier.fillMaxWidth(),
+					)
+					HorizontalDivider(color = Color(0xFF544951))
+					Text("$photoCount 張照片", style = MaterialTheme.typography.labelLarge)
+				}
 			}
-			RecorderTimerText(
-				time = timer,
-				color = light,
-				fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-				modifier = Modifier.align(Alignment.CenterHorizontally),
-			)
-			RecorderAmplitudeGraph(
-				recoderPointsCallback = recordingPointsCallback,
-				bookMarksDeferred = bookMarksDeferred,
-				timelineFontFamily = DownloadableFonts.PLUS_CODE_LATIN_FONT_FAMILY,
-				containerColor = console,
-				chartColor = accent,
-				bookMarkColor = accent,
-				timelineColor = Color(0xFFB8A8A8),
-				timelineColorVariant = Color(0xFF544951),
-				timelineTextColor = light,
-				contentPadding = PaddingValues(horizontal = 6.dp),
-				modifier = Modifier.fillMaxWidth(),
-			)
-			HorizontalDivider(color = Color(0xFF544951))
-			Text("$photoCount 張照片", style = MaterialTheme.typography.labelLarge)
-		}
-		}
-		keyframeControls()
+			keyframeControls()
 		}
 		AnimatedRecorderActionTray(
 			recorderState = recorderState,
