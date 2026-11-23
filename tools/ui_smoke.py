@@ -1,12 +1,12 @@
 """Run on an installed test build: python tools/ui_smoke.py --package ... [--serial ...]."""
 import argparse
-import json
 from pathlib import Path
 import os
 import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
+from verify_mp4 import verify_mp4
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--package", default="com.gujiu502.lectureframe.debug")
@@ -133,7 +133,6 @@ rows = run("shell", "content", "query", "--uri", "content://media/external/audio
 recordings = [row for row in rows.splitlines() if "owner_package_name=" + args.package in row and "_display_name=Mp4Check_" in row]
 assert recordings, "Named recording missing from MediaStore"
 row = max(recordings, key=lambda row: int(re.search(r"_id=(\d+)", row)[1]))
-recording_id = re.search(r"_id=(\d+)", row)[1]
 filename = re.search(r"_display_name=([^,]+)", row)[1]
 audio_path = re.search(r"_data=([^,]+)", row)[1]
 assert re.fullmatch(r"Mp4Check_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.[a-z0-9]+", filename), filename
@@ -155,17 +154,8 @@ pull_video(export_name, exported_video)
 find("匯出 MP4", timeout=120)
 run("pull", audio_path, str(audio_copy))
 
-def streams(path):
-    return json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(path)]))["streams"]
-
-
-original_duration = float(streams(audio_copy)[0]["duration"])
 for video in (saved_video, exported_video):
-    tracks = {track["codec_type"]: track for track in streams(video)}
-    assert tracks["video"]["codec_name"] == "h264" and tracks["audio"]["codec_name"] == "aac"
-    for track in tracks.values():
-        assert abs(float(track["duration"]) - original_duration) < 0.3, tracks
-    subprocess.run(["ffmpeg", "-v", "error", "-xerror", "-i", str(video), "-f", "null", "-"], check=True)
+    verify_mp4(video, audio_copy)
 print("PASS: timestamped save and player export decode as single MP4s with full audio and video tracks")
 run("shell", "am", "start", "-n", args.package + "/com.eva.recorderapp.MainActivity", "-a", "android.intent.action.VIEW", "-d", "app://com.gujiu502.lectureframe")
 

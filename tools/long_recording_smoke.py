@@ -60,12 +60,26 @@ try:
     run('shell','input','keyevent','KEYCODE_WAKEUP')
     run('shell','am','start','-n',args.package+'/com.eva.recorderapp.MainActivity')
     for count in range(6,11): photo(count)
-    tap('停止')
+    tap('結束並儲存')
     fields=find('檔名（不含副檔名）')
     a,b,c,d=map(int,re.findall(r'\d+',fields.get('bounds')))
     run('shell','input','tap',str((a+c)//2),str((b+d)//2))
     run('shell','input','text','LongCheck')
-    tap('完成'); find('開始錄音')
+    tap('完成')
+    deadline = time.monotonic() + 45
+    while time.monotonic() < deadline:
+        try:
+            run('shell', 'uiautomator', 'dump', xml)
+            picker = run('shell', 'cat', xml)
+            if re.search(r'text="LongCheck_[^"]+\.mp4"', picker):
+                run('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+                break
+        except subprocess.CalledProcessError:
+            pass
+        time.sleep(1)
+    else:
+        raise AssertionError('MP4 save dialog did not open')
+    find('開始錄音')
     rows=run('shell','content','query','--uri','content://media/external/audio/media','--projection','_id:_display_name:duration:owner_package_name')
     owned=[r for r in rows.splitlines() if '_display_name=LongCheck_' in r and 'owner_package_name='+args.package in r]
     assert owned,'Long recording was not saved'

@@ -11,6 +11,8 @@ parser.add_argument("metadata", type=Path)
 parser.add_argument("tag")
 parser.add_argument("--min-supported", type=int, default=1)
 args = parser.parse_args()
+release_notes = (Path(__file__).resolve().parent.parent / "docs" / "RELEASE.md").read_text(encoding="utf-8")
+highlights = [line.removeprefix("- ") for line in release_notes.splitlines() if line.startswith("- ")][:3]
 metadata = json.loads(args.metadata.read_text(encoding="utf-8"))
 element, = metadata["elements"]
 assert metadata["applicationId"] == "com.gujiu502.lectureframe"
@@ -27,7 +29,7 @@ manifest = {
     "mandatory": args.min_supported > 1,
     "apkUrl": f"https://github.com/gujiu502/photo-keyframe-recorder/releases/download/{args.tag}/{args.apk.name}",
     "sha256": checksum,
-    "releaseNotes": "修復識別文字讀取、導出與保存的並行安全；保留長時間錄音改善、本地 Whisper 開始停止及舊項目識別。",
+    "releaseNotes": "\n".join(highlights),
     "publishedAt": datetime.now(timezone.utc).isoformat(),
 }
 (args.apk.parent / "update.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
