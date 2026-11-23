@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eva.ui.theme.DownloadableFonts
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.format
 
 @Composable
 internal fun RecorderTimerText(

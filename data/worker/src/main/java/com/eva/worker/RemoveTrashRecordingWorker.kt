@@ -34,7 +34,7 @@ class RemoveTrashRecordingWorker @AssistedInject constructor(
 		// otherwise
 		val notification = createNotification()
 		// foreground info to indicate something is going on
-		setForegroundAsync(
+		setForeground(
 			ForegroundInfo(
 				NotificationConstants.DELETE_WORKER_NOTIFICATION_ID,
 				notification,
