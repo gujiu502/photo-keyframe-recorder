@@ -9,4 +9,6 @@ android {
 
 dependencies {
 	implementation(project(":core:utils"))
+	implementation(libs.androidx.media3.transformer)
+	implementation(libs.androidx.media3.effects)
 }

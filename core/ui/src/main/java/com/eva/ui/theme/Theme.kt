@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 
 val lightScheme = lightColorScheme(
@@ -117,7 +118,7 @@ val darkScheme = darkColorScheme(
 fun RecorderAppTheme(
 	darkTheme: Boolean = isSystemInDarkTheme(),
 	// Dynamic color is available on Android 12+
-	dynamicColor: Boolean = true,
+	dynamicColor: Boolean = false,
 	content: @Composable () -> Unit,
 ) {
 	val context = LocalContext.current
@@ -129,7 +130,24 @@ fun RecorderAppTheme(
 		}
 
 		darkTheme -> darkScheme
-		else -> lightScheme
+		else -> lightScheme.copy(
+			primary = Color(0xFFA54127),
+			onPrimary = Color.White,
+			primaryContainer = Color(0xFFF4DFD4),
+			onPrimaryContainer = Color(0xFF3D180A),
+			secondary = Color(0xFF745548),
+			onSecondary = Color.White,
+			secondaryContainer = Color(0xFFF4DFD4),
+			onSecondaryContainer = Color(0xFF40251B),
+			background = Color(0xFFFAF7F0),
+			surface = Color(0xFFFAF7F0),
+			surfaceContainerLowest = Color(0xFFFFFCF7),
+			surfaceContainerLow = Color(0xFFF8F3EA),
+			surfaceContainer = Color(0xFFF1EBE2),
+			onSurface = Color(0xFF211D24),
+			onSurfaceVariant = Color(0xFF665B55),
+			outlineVariant = Color(0xFFE2D7CB),
+		)
 	}
 
 	MaterialTheme(

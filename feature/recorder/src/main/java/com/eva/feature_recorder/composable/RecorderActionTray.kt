@@ -13,11 +13,12 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eva.feature_recorder.util.RecorderActionMode
 import com.eva.feature_recorder.util.toAction
@@ -54,7 +56,7 @@ internal fun AnimatedRecorderActionTray(
 	AnimatedContent(
 		targetState = mode,
 		transitionSpec = { recorderStateAnimation() },
-		modifier = modifier.defaultMinSize(minHeight = 120.dp),
+		modifier = modifier,
 		contentAlignment = Alignment.Center,
 		label = "Recorder Action Animation"
 	) { state ->
@@ -62,10 +64,12 @@ internal fun AnimatedRecorderActionTray(
 		when (state) {
 			RecorderActionMode.INIT -> {
 				Box(contentAlignment = Alignment.Center) {
-					RecordButton(
+					Button(
 						enabled = isStartRecordingEnabled,
 						onClick = { onRecorderAction(RecorderAction.StartRecorderAction) },
-					)
+						modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+						shape = MaterialTheme.shapes.medium,
+					) { Text(stringResource(R.string.recorder_action_start)) }
 				}
 			}
 

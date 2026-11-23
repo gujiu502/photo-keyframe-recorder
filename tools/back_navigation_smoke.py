@@ -76,8 +76,8 @@ def exit_from_home():
 def open_test_recording(long_press=False):
     tap('錄音列表')
     current = nodes()
-    names = [n.get('text') for n in current if n.get('text', '').startswith('ZipCheck_')]
-    assert names, 'Use a device with a ZIP smoke-test recording; do not select user recordings'
+    names = [n.get('text') for n in current if n.get('text', '').startswith(('Mp4Check_', 'ZipCheck_'))]
+    assert names, 'Use a device with a smoke-test recording; do not select user recordings'
     node = find(names[0])
     x1, y1, x2, y2 = map(int, re.findall(r'\d+', node.get('bounds')))
     x, y = str((x1+x2)//2), str((y1+y2)//2)

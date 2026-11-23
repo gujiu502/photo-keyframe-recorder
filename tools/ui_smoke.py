@@ -1,5 +1,6 @@
 """Run on an installed test build: python tools/ui_smoke.py --package ... [--serial ...]."""
 import argparse
+import json
 from pathlib import Path
 import os
 import re
@@ -78,47 +79,94 @@ run("shell", "input", "keyevent", "3")
 time.sleep(3)
 run("shell", "am", "start", "-n", args.package + "/com.eva.recorderapp.MainActivity")
 find("3 張照片")
-tap("停止")
+tap("結束並儲存")
 find("檔名（不含副檔名）")
 assert not any(n.get("text") == "完成" and n.get("enabled") == "true" for n in nodes()), "Empty filename must not save"
 fields = [n for n in nodes() if n.get("class") == "android.widget.EditText"]
 field = next(n for n in fields if any("檔名" in child.get("text", "") for child in n.iter()))
 x1, y1, x2, y2 = map(int, re.findall(r"\d+", field.get("bounds")))
 run("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
-run("shell", "input", "text", "ZipCheck")
+run("shell", "input", "text", "Mp4Check")
 tap("完成")
+def save_video(suffix=""):
+    deadline = time.monotonic() + 35
+    while time.monotonic() < deadline:
+        picker = nodes()
+        filename = next((n.get("text") for n in picker if n.get("class") == "android.widget.EditText"
+                         and (n.get("text") or "").endswith(".mp4")), None)
+        save_label = next((n.get("text") for n in picker if n.get("class") == "android.widget.Button"
+                           and n.get("text") in ("儲存", "保存", "Save", "SAVE")), None)
+        if filename and save_label:
+            if suffix:
+                field = next(n for n in picker if n.get("class") == "android.widget.EditText" and n.get("text") == filename)
+                x1, y1, x2, y2 = map(int, re.findall(r"\d+", field.get("bounds")))
+                run("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+                run("shell", "input", "keyevent", "KEYCODE_MOVE_END")
+                for _ in range(len(filename)):
+                    run("shell", "input", "keyevent", "KEYCODE_DEL")
+                filename = filename.removesuffix(".mp4") + suffix + ".mp4"
+                run("shell", "input", "text", filename)
+            tap(save_label)
+            return filename
+    raise AssertionError("MP4 document picker did not open")
+
+
+def pull_video(name, path):
+    deadline = time.monotonic() + 120
+    while time.monotonic() < deadline:
+        pulled = subprocess.run(adb + ["pull", "/sdcard/Download/" + name, str(path)], capture_output=True)
+        if pulled.returncode == 0 and path.stat().st_size > 0:
+            return
+        time.sleep(1)
+    raise AssertionError("MP4 was not saved to Downloads")
+
+
+save_name = save_video()
+assert re.fullmatch(r"Mp4Check_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.mp4", save_name), save_name
+saved_video = output / "saved.mp4"
+pull_video(save_name, saved_video)
 find("開始錄音")
 print("PASS: CameraX capture, paused captures, background reconnect and stop")
 
 rows = run("shell", "content", "query", "--uri", "content://media/external/audio/media",
            "--projection", "_id:_display_name:_data:owner_package_name")
-recordings = [row for row in rows.splitlines() if "owner_package_name=" + args.package in row and "_display_name=ZipCheck_" in row]
+recordings = [row for row in rows.splitlines() if "owner_package_name=" + args.package in row and "_display_name=Mp4Check_" in row]
 assert recordings, "Named recording missing from MediaStore"
 row = max(recordings, key=lambda row: int(re.search(r"_id=(\d+)", row)[1]))
 recording_id = re.search(r"_id=(\d+)", row)[1]
 filename = re.search(r"_display_name=([^,]+)", row)[1]
 audio_path = re.search(r"_data=([^,]+)", row)[1]
-assert re.fullmatch(r"ZipCheck_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.[a-z0-9]+", filename), filename
-run("shell", "am", "start", "-n", args.package + "/com.eva.recorderapp.MainActivity", "-a", "android.intent.action.VIEW",
-    "-d", "app://com.gujiu502.lectureframe/player/" + recording_id)
-tap("導出")
-picker = nodes()
-zip_name = next(node.get("text") for node in picker if node.get("class") == "android.widget.EditText")
-save_label = next(node.get("text") for node in picker if node.get("class") == "android.widget.Button" and node.get("text") in ("儲存", "保存", "Save", "SAVE"))
-tap(save_label)
-find("導出")
-zip_path = output / "lecture.zip"
+assert re.fullmatch(r"Mp4Check_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.[a-z0-9]+", filename), filename
+with (output / "recorder.png").open("wb") as screenshot:
+    subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=True)
+tap("錄音列表")
+find(filename.rsplit(".", 1)[0])
+with (output / "recordings.png").open("wb") as screenshot:
+    subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=True)
+tap(filename.rsplit(".", 1)[0])
+find("匯出 MP4")
+with (output / "player.png").open("wb") as screenshot:
+    subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=True)
+tap("匯出 MP4")
+export_name = save_video("-reexport")
+exported_video = output / "exported.mp4"
 audio_copy = output / "original.m4a"
-deadline = time.monotonic() + 30
-while time.monotonic() < deadline:
-    pulled = subprocess.run(adb + ["pull", "/sdcard/Download/" + zip_name, str(zip_path)], capture_output=True)
-    if pulled.returncode == 0:
-        break
-    time.sleep(0.5)
-assert pulled.returncode == 0, "ZIP was not saved to Downloads"
+pull_video(export_name, exported_video)
+find("匯出 MP4", timeout=120)
 run("pull", audio_path, str(audio_copy))
-subprocess.run([os.sys.executable, "tools/verify_zip.py", str(zip_path), str(audio_copy)], check=True)
-print("PASS: filename timestamp and player ZIP export through Android document picker")
+
+def streams(path):
+    return json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(path)]))["streams"]
+
+
+original_duration = float(streams(audio_copy)[0]["duration"])
+for video in (saved_video, exported_video):
+    tracks = {track["codec_type"]: track for track in streams(video)}
+    assert tracks["video"]["codec_name"] == "h264" and tracks["audio"]["codec_name"] == "aac"
+    for track in tracks.values():
+        assert abs(float(track["duration"]) - original_duration) < 0.3, tracks
+    subprocess.run(["ffmpeg", "-v", "error", "-xerror", "-i", str(video), "-f", "null", "-"], check=True)
+print("PASS: timestamped save and player export decode as single MP4s with full audio and video tracks")
 run("shell", "am", "start", "-n", args.package + "/com.eva.recorderapp.MainActivity", "-a", "android.intent.action.VIEW", "-d", "app://com.gujiu502.lectureframe")
 
 tap("開始錄音")

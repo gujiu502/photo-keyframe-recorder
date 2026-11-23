@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
@@ -29,18 +30,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.eva.database.formatPosition
+import com.eva.database.lectureVideoFileName
 import com.eva.feature_recorder.composable.SaveRecordingDialog
 import com.eva.recorder.domain.models.RecorderState
 import java.io.File
 
 @Composable
-internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: (com.eva.recorder.domain.models.RecorderAction) -> Unit, vm: KeyframeViewModel = hiltViewModel()) {
+internal fun KeyframeTools(
+    state: RecorderState,
+    timer: () -> String,
+    onAction: (com.eva.recorder.domain.models.RecorderAction) -> Unit,
+    pendingVideo: String?,
+    onPickerRequested: () -> Unit,
+    vm: KeyframeViewModel,
+) {
     val context = LocalContext.current
     val photos by vm.items.collectAsStateWithLifecycle()
     val unfinished by vm.unfinished.collectAsStateWithLifecycle()
@@ -55,6 +63,22 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: 
         onSave = { name, course -> onAction(com.eva.recorder.domain.models.RecorderAction.SaveRecorderAction(name, course)) },
     )
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val exporting by vm.exporting.collectAsStateWithLifecycle()
+    var videoSessionId by rememberSaveable { mutableStateOf<String?>(null) }
+    val saveMp4 = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->
+        val id = videoSessionId
+        videoSessionId = null
+        if (uri != null && id != null) vm.saveVideo(id, uri)
+    }
+    LaunchedEffect(pendingVideo) {
+        val id = pendingVideo ?: return@LaunchedEffect
+        val session = vm.awaitSavedSession(id)
+        onPickerRequested()
+        if (session != null) {
+            videoSessionId = id
+            saveMp4.launch(lectureVideoFileName(session.fileName ?: "錄音"))
+        }
+    }
     var showCamera by remember { mutableStateOf(false) }
     var discardId by remember { mutableStateOf<String?>(null) }
     var recoveryExportId by remember { mutableStateOf<String?>(null) }
@@ -75,19 +99,26 @@ internal fun KeyframeTools(state: RecorderState, timer: () -> String, onAction: 
             } }
         }
     }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        if (state in listOf(RecorderState.RECORDING, RecorderState.PAUSED)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (exporting) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FilledTonalButton(onClick = {
+                Text("正在儲存 MP4", modifier = Modifier.weight(1f))
+                TextButton(onClick = vm::cancelVideo) { Text("取消匯出") }
+            }
+        }
+        if (state in listOf(RecorderState.RECORDING, RecorderState.PAUSED)) {
+                OutlinedButton(onClick = {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
                         showCamera = true else permission.launch(Manifest.permission.CAMERA)
-                }, enabled = active != null && !busy) {
-                    Icon(Icons.Default.CameraAlt, "拍照關鍵幀"); Spacer(Modifier.width(8.dp)); Text("拍照關鍵幀")
+                }, enabled = active != null && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = MaterialTheme.shapes.medium) {
+                    Icon(Icons.Default.CameraAlt, null)
+                    Spacer(Modifier.width(10.dp))
+                    Text("拍照關鍵幀", modifier = Modifier.weight(1f))
+                    Text("›", style = MaterialTheme.typography.titleLarge)
                 }
-                Spacer(Modifier.width(12.dp))
-                Text("${photos.count { it.type == "PHOTO" }} 張照片", style = MaterialTheme.typography.labelLarge)
-            }
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 items(photos.filter { it.type == "PHOTO" }, key = { it.id }) { item ->
                     Column(Modifier.clickable { selectedPhoto = item.mediaPath }) {
                         AsyncImage(File(requireNotNull(item.mediaPath)), "關鍵幀 ${formatPosition(item.positionMs)}", modifier = Modifier.size(72.dp))

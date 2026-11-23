@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eva.database.SessionStore
 import com.eva.database.LectureExporter
+import com.eva.database.LectureVideoExporter
+import com.eva.database.entity.RecordingSessionEntity
 import com.eva.database.entity.TimelineItemEntity
 import com.eva.recordings.domain.provider.RecorderFileProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,9 +19,16 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class KeyframeViewModel @Inject constructor(val sessions: SessionStore, private val audioFiles: RecorderFileProvider, private val exporter: LectureExporter) : ViewModel() {
+class KeyframeViewModel @Inject constructor(
+    val sessions: SessionStore,
+    private val audioFiles: RecorderFileProvider,
+    private val exporter: LectureExporter,
+    private val videoExporter: LectureVideoExporter,
+) : ViewModel() {
     val messages = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val busy = MutableStateFlow(false)
+    val exporting = MutableStateFlow(false)
+    private var videoJob: Job? = null
     private val lock = Mutex()
     @OptIn(ExperimentalCoroutinesApi::class)
     val items = sessions.activeId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else sessions.dao.observeSession(id) }
@@ -77,4 +86,31 @@ class KeyframeViewModel @Inject constructor(val sessions: SessionStore, private 
         runCatching { exporter.export(uri, null, null, id, "恢復的講義") }
             .onSuccess { messages.emit("已導出恢復包") }.onFailure { messages.emit(it.message ?: "導出失敗") }
     }
+
+    suspend fun awaitSavedSession(id: String): RecordingSessionEntity? =
+        sessions.dao.observeSessionRecord(id).first {
+            it == null || it.status in listOf("COMPLETE", "RECOVERY_REQUIRED", "CANCELLED")
+        }?.takeIf { it.status == "COMPLETE" }
+
+    fun saveVideo(sessionId: String, destination: Uri) {
+        if (exporting.value) return
+        exporting.value = true
+        videoJob = viewModelScope.launch {
+            try {
+                val session = requireNotNull(sessions.dao.session(sessionId))
+                val audio = Uri.parse(requireNotNull(session.exportUri))
+                videoExporter.export(destination, audio, requireNotNull(session.recordingId), session.fileName ?: "錄音")
+                messages.emit("MP4 已儲存")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.e("LectureVideo", "Export failed", e)
+                messages.emit("MP4 儲存失敗，錄音已保留，可從錄音列表重試")
+            } finally {
+                exporting.value = false
+            }
+        }
+    }
+
+    fun cancelVideo() { videoJob?.cancel() }
 }

@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eva.ui.theme.DownloadableFonts
-import com.eva.utils.LocalTimeFormats
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
@@ -30,8 +29,7 @@ internal fun RecorderTimerText(
 		derivedStateOf {
 			val readTime = time()
 
-			if (readTime.hour > 0) readTime.format(LocalTimeFormats.LOCALTIME_FORMAT_HH_MM_SS_SF2)
-			else readTime.format(LocalTimeFormats.LOCALTIME_FORMAT_MM_SS_SF2)
+			readTime.toString().substringBefore('.').let { if (it.length == 5) "$it:00" else it }
 		}
 	}
 

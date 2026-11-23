@@ -51,8 +51,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.eva.ui.R
-import com.eva.ui.animation.SharedElementTransitionKeys
-import com.eva.ui.animation.sharedBoundsWrapper
 import com.eva.ui.theme.RecorderAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -62,7 +60,6 @@ internal fun RecorderTopBar(
 	modifier: Modifier = Modifier,
 	onNavigateToBin: () -> Unit = {},
 	onNavigateToSettings: () -> Unit = {},
-	onNavigateToRecordings: () -> Unit = {},
 	navigation: @Composable () -> Unit = {},
 	onAddBookMark: () -> Unit = {},
 	colors: TopAppBarColors = TopAppBarDefaults
@@ -81,17 +78,7 @@ internal fun RecorderTopBar(
 				contentAlignment = Alignment.BottomCenter,
 				modifier = Modifier.widthIn(min = 60.dp)
 			) { isNormal ->
-				if (isNormal) {
-					TextButton(
-						onClick = onNavigateToRecordings,
-						modifier = Modifier.sharedBoundsWrapper(key = SharedElementTransitionKeys.RECORDINGS_LIST_SHARED_BOUNDS)
-					) {
-						Text(
-							text = stringResource(id = R.string.show_recordings_list),
-							fontWeight = FontWeight.SemiBold
-						)
-					}
-				} else {
+				if (!isNormal) {
 					TooltipBox(
 						positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
 							TooltipAnchorPosition.Below

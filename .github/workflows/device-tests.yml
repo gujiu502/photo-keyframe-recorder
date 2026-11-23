@@ -17,6 +17,8 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
+      - name: Install media verification tools
+        run: command -v ffprobe || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

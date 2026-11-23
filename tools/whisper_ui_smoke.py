@@ -1,10 +1,9 @@
-"""Verify local Whisper controls on an existing, task-owned ZIP smoke recording."""
+"""Verify local Whisper controls on an existing, task-owned smoke recording."""
 import argparse
 import hashlib
 from pathlib import Path
 import re
 import time
-import zipfile
 import back_navigation_smoke as ui
 
 p = argparse.ArgumentParser()
@@ -17,12 +16,12 @@ ui.adb = [ui.adb[0], '-s', a.serial]
 output = Path('work/whisper-ui-smoke')
 output.mkdir(parents=True, exist_ok=True)
 rows = ui.run('shell', 'content', 'query', '--uri', 'content://media/external/audio/media', '--projection', '_id:_display_name:_data:owner_package_name')
-owned = [r for r in rows.splitlines() if 'owner_package_name=' + a.package in r and '_display_name=ZipCheck_' in r]
+owned = [r for r in rows.splitlines() if 'owner_package_name=' + a.package in r and '_display_name=Mp4Check_' in r]
 assert owned
 if a.recording_id is None:
     a.recording_id = max(int(re.search(r'_id=(\d+)', r)[1]) for r in owned)
 row = next(r for r in owned if re.search(r'_id=' + str(a.recording_id) + r',', r))
-assert 'owner_package_name=' + a.package in row and '_display_name=ZipCheck_' in row, 'Only use task-owned smoke recordings'
+assert 'owner_package_name=' + a.package in row and '_display_name=Mp4Check_' in row, 'Only use task-owned smoke recordings'
 audio = re.search(r'_data=([^,]+)', row)[1]
 ui.run('pull', audio, str(output / 'original-before'))
 original_hash = hashlib.sha256((output / 'original-before').read_bytes()).hexdigest()
@@ -58,17 +57,10 @@ try:
     open_recording()
     ui.find('導出文字')
     print('PASS: TXT export and result survives app restart', flush=True)
-    ui.tap('關閉'); ui.tap('導出')
-    name = ui.save_document()
-    ui.find('導出')
-    ui.run('pull', '/sdcard/Download/' + name, str(output / 'lecture.zip'))
-    with zipfile.ZipFile(output / 'lecture.zip') as z:
-        assert z.testzip() is None
-        assert text in z.read('lecture.md').decode('utf-8')
-        assert any(hashlib.sha256(z.read(n)).hexdigest() == original_hash for n in z.namelist() if n.startswith('audio/'))
+    ui.tap('關閉')
     ui.run('pull', audio, str(output / 'original-after'))
     assert hashlib.sha256((output / 'original-after').read_bytes()).hexdigest() == original_hash
-    print('PASS: transcript in ZIP, CRC and unchanged original audio', flush=True)
+    print('PASS: recognition preserved original audio bytes', flush=True)
     ui.tap('本地識別'); ui.tap('自動語言'); ui.tap('開始識別')
     ui.find('重新識別這個錄音？'); ui.tap('開始識別')
     stop = next((n for n in ui.nodes() if n.get('text') == '停止識別' and n.get('enabled') == 'true'), None)

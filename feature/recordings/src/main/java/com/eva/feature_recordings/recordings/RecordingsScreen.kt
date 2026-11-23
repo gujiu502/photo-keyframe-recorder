@@ -2,6 +2,7 @@ package com.eva.feature_recordings.recordings
 
 import androidx.activity.compose.BackHandler
 import com.eva.ui.navigation.LocalNavigateHome
+import com.eva.ui.navigation.RecordingNavigation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -130,6 +131,7 @@ internal fun RecordingsScreen(
 			)
 		},
 		bottomBar = {
+			if (!isAnySelected) RecordingNavigation(true, goHome, {})
 			RecordingsBottomBar(
 				showRename = showRenameOption,
 				isVisible = isAnySelected,

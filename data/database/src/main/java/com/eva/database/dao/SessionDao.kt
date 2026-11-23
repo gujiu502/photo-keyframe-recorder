@@ -15,6 +15,7 @@ interface SessionDao {
     @Insert suspend fun insertSession(session: RecordingSessionEntity)
     @Upsert suspend fun putItem(item: TimelineItemEntity)
     @Query("SELECT * FROM recording_sessions WHERE sessionId=:id") suspend fun session(id: String): RecordingSessionEntity?
+    @Query("SELECT * FROM recording_sessions WHERE sessionId=:id") fun observeSessionRecord(id: String): Flow<RecordingSessionEntity?>
     @Query("SELECT * FROM recording_sessions WHERE status != 'COMPLETE' ORDER BY startedAt")
     fun unfinished(): Flow<List<RecordingSessionEntity>>
     @Query("SELECT * FROM recording_sessions WHERE status != 'COMPLETE'")

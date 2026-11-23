@@ -13,7 +13,8 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +24,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -37,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -75,13 +76,11 @@ internal fun RecordingCard(
 		music.owner ?: context.getString(R.string.other_app_subtitle)
 	}
 
-	val cardColor = if (!isSelected) CardDefaults.elevatedCardColors()
-	else CardDefaults.cardColors()
-
-	ElevatedCard(
-		colors = cardColor,
+	OutlinedCard(
+		colors = CardDefaults.outlinedCardColors(containerColor =
+			if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest),
 		shape = shape,
-		elevation = CardDefaults.elevatedCardElevation(pressedElevation = 4.dp),
+		border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
 		modifier = modifier
 			.recordingCardCombinedClick(isSelectable, onItemClick, onItemSelect)
 			.sharedBoundsWrapper(
@@ -112,14 +111,10 @@ internal fun RecordingCard(
 							.colors(selectedColor = MaterialTheme.colorScheme.secondary),
 						modifier = Modifier.size(24.dp)
 					)
-				else
-					Image(
-						painter = painterResource(id = R.drawable.ic_microphone),
-						contentDescription = null,
-						colorFilter = ColorFilter
-							.tint(color = MaterialTheme.colorScheme.primary),
-						modifier = Modifier.size(24.dp)
-					)
+				else Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary,
+					contentColor = MaterialTheme.colorScheme.onPrimary) {
+					Icon(painterResource(R.drawable.ic_play), null, Modifier.padding(8.dp).size(18.dp))
+				}
 
 			}
 			Column(
@@ -127,9 +122,9 @@ internal fun RecordingCard(
 				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
 				Text(
-					text = music.displayName,
+					text = music.title.ifBlank { music.displayName },
 					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.primary,
+					color = MaterialTheme.colorScheme.onSurface,
 					modifier = Modifier.sharedBoundsWrapper(
 						key = SharedElementTransitionKeys.recordSharedEntryTitle(music.id)
 					)
