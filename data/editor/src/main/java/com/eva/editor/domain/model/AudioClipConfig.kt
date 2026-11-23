@@ -15,7 +15,8 @@ data class AudioClipConfig(
 	) : this(startMillis.milliseconds, endMillis.milliseconds)
 
 	fun validate(totalDuration: Duration): Boolean {
-		return hasMinimumDuration && start.isPositive() && end <= totalDuration
+		return start.isFinite() && end.isFinite() && totalDuration.isFinite() &&
+			start >= Duration.ZERO && hasMinimumDuration && end <= totalDuration
 	}
 
 	val hasMinimumDuration: Boolean
