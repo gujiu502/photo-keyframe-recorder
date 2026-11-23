@@ -57,7 +57,7 @@ internal fun RecorderAmplitudeGraph(
 	Surface(
 		shape = shape,
 		color = containerColor,
-		modifier = modifier.height(86.dp),
+		modifier = modifier.height(58.dp),
 	) {
 		Spacer(
 			modifier = Modifier

@@ -79,6 +79,8 @@ run("shell", "input", "keyevent", "3")
 time.sleep(3)
 run("shell", "am", "start", "-n", args.package + "/com.eva.recorderapp.MainActivity")
 find("3 張照片")
+with (output / "recording.png").open("wb") as screenshot:
+    subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=True)
 tap("結束並儲存")
 find("檔名（不含副檔名）")
 assert not any(n.get("text") == "完成" and n.get("enabled") == "true" for n in nodes()), "Empty filename must not save"

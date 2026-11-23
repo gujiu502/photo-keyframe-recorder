@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,14 +59,18 @@ internal fun RecorderContent(
 		else -> "待機"
 	}
 	Column(
-		modifier = modifier.verticalScroll(rememberScrollState()),
-		verticalArrangement = Arrangement.spacedBy(12.dp),
+		modifier = modifier,
+		verticalArrangement = Arrangement.spacedBy(8.dp),
 	) {
+		Column(
+			modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+			verticalArrangement = Arrangement.spacedBy(8.dp),
+		) {
 		Text("錄音工作台", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
 		Surface(color = console, contentColor = light, shape = RoundedCornerShape(22.dp)) {
 		Column(
-			verticalArrangement = Arrangement.spacedBy(12.dp),
-			modifier = Modifier.fillMaxWidth().padding(18.dp),
+			verticalArrangement = Arrangement.spacedBy(6.dp),
+			modifier = Modifier.fillMaxWidth().padding(14.dp),
 		) {
 			Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 				androidx.compose.foundation.layout.Spacer(Modifier.size(10.dp).background(accent, CircleShape))
@@ -87,6 +92,7 @@ internal fun RecorderContent(
 				timelineColor = Color(0xFFB8A8A8),
 				timelineColorVariant = Color(0xFF544951),
 				timelineTextColor = light,
+				contentPadding = PaddingValues(horizontal = 6.dp),
 				modifier = Modifier.fillMaxWidth(),
 			)
 			HorizontalDivider(color = Color(0xFF544951))
@@ -94,6 +100,7 @@ internal fun RecorderContent(
 		}
 		}
 		keyframeControls()
+		}
 		AnimatedRecorderActionTray(
 			recorderState = recorderState,
 			onRecorderAction = onRecorderAction,

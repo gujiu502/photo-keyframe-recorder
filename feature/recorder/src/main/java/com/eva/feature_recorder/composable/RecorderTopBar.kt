@@ -68,7 +68,7 @@ internal fun RecorderTopBar(
 	var showDropDown by remember { mutableStateOf(false) }
 
 	TopAppBar(
-		title = { Text(text = stringResource(id = R.string.recorder_top_bar_title)) },
+		title = { Text(text = "照片關鍵幀錄音", fontWeight = FontWeight.SemiBold) },
 		navigationIcon = navigation,
 		actions = {
 			AnimatedContent(
