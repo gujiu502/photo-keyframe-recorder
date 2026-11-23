@@ -1,0 +1,1 @@
+Riva ASR protobuf files are from [nvidia-riva/common](https://github.com/nvidia-riva/common/tree/268890b7286031a6d4950e34f7ce13ed0d4ce621/riva/proto), revision `268890b7286031a6d4950e34f7ce13ed0d4ce621`. See the adjacent MIT license.

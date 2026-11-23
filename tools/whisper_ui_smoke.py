@@ -28,10 +28,29 @@ original_hash = hashlib.sha256((output / 'original-before').read_bytes()).hexdig
 
 def open_recording():
     ui.run('shell', 'am', 'start', '-n', a.package + '/com.eva.recorderapp.MainActivity', '-a', 'android.intent.action.VIEW', '-d', 'app://com.gujiu502.lectureframe/player/' + str(a.recording_id))
-    ui.tap('本地識別')
+    ui.tap('語音識別')
+    ui.tap('離線 Whisper')
 
 
 try:
+    ui.run('shell', 'am', 'start', '-n', a.package + '/com.eva.recorderapp.MainActivity',
+           '-a', 'android.intent.action.VIEW', '-d', 'app://com.gujiu502.lectureframe/player/' + str(a.recording_id))
+    ui.tap('語音識別')
+    ui.find('開始雲端辨識')
+    ui.tap('設定 NVIDIA 金鑰')
+    ui.tap('貼上 NVIDIA API 金鑰')
+    ui.run('shell', 'input', 'text', 'nvapi-test_fixture_not_a_real_credential')
+    ui.tap('加密儲存')
+    ui.find('管理 NVIDIA 金鑰')
+    ui.run('shell', 'am', 'force-stop', a.package)
+    ui.run('shell', 'am', 'start', '-n', a.package + '/com.eva.recorderapp.MainActivity',
+           '-a', 'android.intent.action.VIEW', '-d', 'app://com.gujiu502.lectureframe/player/' + str(a.recording_id))
+    ui.tap('語音識別')
+    ui.tap('管理 NVIDIA 金鑰')
+    ui.tap('移除本機金鑰')
+    ui.find('設定 NVIDIA 金鑰')
+    print('PASS: cloud is the default and device key setup survives app restart and can be removed', flush=True)
+    ui.tap('關閉')
     open_recording()
     if any(n.get('text') == '下載 Whisper 模型' for n in ui.nodes()):
         ui.tap('下載 Whisper 模型'); ui.find('下載本地 Whisper 模型？')
@@ -61,7 +80,7 @@ try:
     ui.run('pull', audio, str(output / 'original-after'))
     assert hashlib.sha256((output / 'original-after').read_bytes()).hexdigest() == original_hash
     print('PASS: recognition preserved original audio bytes', flush=True)
-    ui.tap('本地識別'); ui.tap('自動語言'); ui.tap('開始識別')
+    ui.tap('語音識別'); ui.tap('離線 Whisper'); ui.tap('自動語言'); ui.tap('開始識別')
     ui.find('重新識別這個錄音？'); ui.tap('開始識別')
     stop = next((n for n in ui.nodes() if n.get('text') == '停止識別' and n.get('enabled') == 'true'), None)
     if stop is not None:

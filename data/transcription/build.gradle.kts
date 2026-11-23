@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.recorderapp.android.library)
     alias(libs.plugins.recorderapp.hilt)
+    alias(libs.plugins.recorderapp.protobuf)
 }
 android {
     namespace = "com.eva.transcription"
@@ -15,4 +16,8 @@ dependencies {
     implementation(project(":data:database"))
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.lifecycle.service)
+    implementation("io.grpc:grpc-okhttp:1.85.0")
+    implementation("io.grpc:grpc-protobuf-lite:1.85.0")
+    testImplementation("io.grpc:grpc-inprocess:1.85.0")
+    testImplementation("io.grpc:grpc-stub:1.85.0")
 }

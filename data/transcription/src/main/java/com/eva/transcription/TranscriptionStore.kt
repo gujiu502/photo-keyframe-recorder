@@ -15,7 +15,15 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class TranscriptionStatus(val recordingId: Long? = null, val running: Boolean = false, val message: String = "", val doneMs: Long = 0)
+data class TranscriptionStatus(
+    val recordingId: Long? = null,
+    val running: Boolean = false,
+    val message: String = "",
+    val doneMs: Long = 0,
+    val partial: String = "",
+    val revision: Long = 0,
+    val cloud: Boolean = false,
+)
 
 @Singleton
 class TranscriptionStore @Inject constructor(@ApplicationContext val context: Context, val sessions: SessionStore) {
