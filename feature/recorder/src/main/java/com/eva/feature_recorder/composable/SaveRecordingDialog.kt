@@ -20,6 +20,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.eva.recorder.domain.models.isValidRecordingName
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.window.DialogProperties
@@ -38,12 +40,14 @@ internal fun SaveRecordingDialog(
 	var name by rememberSaveable { mutableStateOf("") }
 	var course by rememberSaveable { mutableStateOf("") }
 	val valid = isValidRecordingName(name) && (course.isBlank() || isValidRecordingName(course))
+	val keyboard = LocalSoftwareKeyboardController.current
 
 	AlertDialog(
 		onDismissRequest = onDismiss,
 		confirmButton = {
 			Button(
 				onClick = {
+					keyboard?.hide()
 					onDismiss()
 					onSave(name.trim(), course.trim().ifEmpty { "未分類" })
 				},
@@ -68,8 +72,10 @@ internal fun SaveRecordingDialog(
 					modifier = Modifier.fillMaxWidth(),
 					label = { Text("檔名（不含副檔名）") }, isError = name.isNotEmpty() && !valid,
 					supportingText = { Text(if (name.isNotEmpty() && !valid) "最多 50 字，不可包含 / \\ : * ? \" < > |" else "自動附加日期時間：yyyy-MM-dd_HH-mm-ss") })
-				if (valid) JournalPanel("檔名格式") {
-					Text("${name.trim()}_yyyy-MM-dd_HH-mm-ss.mp4", style = MaterialTheme.typography.bodySmall)
+				JournalPanel("檔名格式") {
+					val stem = if (isValidRecordingName(name)) name.trim() else "錄音"
+					Text("${stem}_yyyy-MM-dd_HH-mm-ss.mp4", style = MaterialTheme.typography.bodySmall,
+						maxLines = 1, overflow = TextOverflow.Ellipsis)
 				}
 			}
 		},

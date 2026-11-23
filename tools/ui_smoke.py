@@ -89,6 +89,12 @@ field = next(n for n in fields if any("檔名" in child.get("text", "") for chil
 x1, y1, x2, y2 = map(int, re.findall(r"\d+", field.get("bounds")))
 run("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
 run("shell", "input", "text", "Mp4Check")
+find("檔名格式")
+if re.search(r"mInputShown=true|mImeWindowVis=[37]", run("shell", "dumpsys", "input_method")):
+    run("shell", "input", "keyevent", "KEYCODE_BACK")
+    find("檔名（不含副檔名）")
+with (output / "save-dialog.png").open("wb") as screenshot:
+    subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=True)
 tap("完成")
 def save_video(suffix=""):
     deadline = time.monotonic() + 35
@@ -110,6 +116,10 @@ def save_video(suffix=""):
                 run("shell", "input", "text", filename)
             tap(save_label)
             return filename
+    with (output / "picker-timeout.png").open("wb") as screenshot:
+        subprocess.run(adb + ["exec-out", "screencap", "-p"], stdout=screenshot, check=False)
+    (output / "picker-timeout.xml").write_text(run("shell", "cat", "/sdcard/keyframe-smoke.xml"), encoding="utf-8")
+    (output / "picker-timeout-logcat.txt").write_text(run("logcat", "-d"), encoding="utf-8")
     raise AssertionError("MP4 document picker did not open")
 
 
